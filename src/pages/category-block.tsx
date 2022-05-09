@@ -1,4 +1,4 @@
-import { Typography } from "@mui/material";
+import { InputBase } from "@mui/material";
 import { BlockBase } from "./base-block";
 
 type Props = {
@@ -7,6 +7,6 @@ type Props = {
 
 export const CategoryBlock: React.FC<Props> = ({ text }) => (
   <BlockBase>
-    <Typography variant="h6">{text}</Typography>
+    <InputBase fullWidth defaultValue={text} multiline />
   </BlockBase>
 );

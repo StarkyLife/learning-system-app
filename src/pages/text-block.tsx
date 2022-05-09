@@ -1,13 +1,13 @@
-import { Typography } from "@mui/material";
+import { InputBase, Typography } from "@mui/material";
 import { BlockBase } from "./base-block";
 
 type Props = {
-  text: string;
+  title: string;
 };
 
-export const TextBlock: React.FC<Props> = ({ text }) => (
+export const TextBlock: React.FC<Props> = ({ title }) => (
   <BlockBase>
-    <Typography variant="h6">{text}</Typography>
+    <InputBase fullWidth defaultValue={title} multiline />
     <Typography>Hidden content</Typography>
   </BlockBase>
 );
