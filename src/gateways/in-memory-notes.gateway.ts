@@ -25,4 +25,8 @@ export class InMemoryNotesGateway implements NotesGateway {
   saveNote: NotesGateway["saveNote"] = async (id, title) => {
     this.notes.set(id, { id, title });
   };
+  createNewNote: NotesGateway["createNewNote"] = async () => {
+    const newId = Date.now().toString();
+    this.notes.set(newId, { id: newId, title: "" });
+  };
 }

@@ -1,11 +1,11 @@
-import { Container, Stack } from "@mui/material";
+import { Button, Container, Stack } from "@mui/material";
 import { useCallback, useEffect, useState } from "react";
 import { Note } from "../entities/notes";
 import { useNotesGateway } from "../gateways/use-notes-gateway";
 import { NoteBlock } from "./note-block";
 
 export const LearningSystemPage: React.FC = () => {
-  const { getNotes, saveNote } = useNotesGateway();
+  const { getNotes, saveNote, createNewNote } = useNotesGateway();
 
   const [notes, setNotes] = useState<Note[]>([]);
   const initializeNotes = useCallback(async () => {
@@ -15,15 +15,19 @@ export const LearningSystemPage: React.FC = () => {
 
   useEffect(() => {
     initializeNotes();
-  }, []);
+  }, [initializeNotes]);
 
-  const handleNoteSave = useCallback(
+  const handleNoteUpdate = useCallback(
     async (id: string, title: string) => {
       await saveNote(id, title);
       await initializeNotes();
     },
     [saveNote, initializeNotes]
   );
+  const handleNewNoteCreate = useCallback(async () => {
+    await createNewNote();
+    await initializeNotes();
+  }, [createNewNote, initializeNotes]);
 
   return (
     <Container maxWidth="md">
@@ -33,9 +37,12 @@ export const LearningSystemPage: React.FC = () => {
             key={note.id}
             id={note.id}
             title={note.title}
-            onSave={handleNoteSave}
+            onSave={handleNoteUpdate}
           />
         ))}
+        <Button variant="outlined" onClick={handleNewNoteCreate}>
+          Add new
+        </Button>
       </Stack>
     </Container>
   );
