@@ -8,7 +8,7 @@ type Props = {
   onSave: (id: string, title: string) => void;
 };
 
-export const TextBlock: React.FC<Props> = ({ id, title, onSave }) => {
+export const NoteBlock: React.FC<Props> = ({ id, title, onSave }) => {
   const [titleValue, setTitleValue] = useState(title);
 
   useEffect(() => {
