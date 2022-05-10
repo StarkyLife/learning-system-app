@@ -6,6 +6,6 @@ export interface NotesGateway {
   saveNote(id: string, title: string): Promise<void>;
 }
 
-export const NotestGatewayContext = React.createContext<NotesGateway | null>(
+export const NotesGatewayContext = React.createContext<NotesGateway | null>(
   null
 );

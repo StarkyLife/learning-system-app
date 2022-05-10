@@ -1,28 +1,28 @@
 import { Container, Stack } from "@mui/material";
-import { useCallback, useContext, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Note } from "../entities/notes";
-import { NotestGatewayContext } from "../gateways/notes.gateway";
+import { useNotesGateway } from "../gateways/use-notes-gateway";
 import { NoteBlock } from "./note-block";
 
 export const LearningSystemPage: React.FC = () => {
-  const notesGateway = useContext(NotestGatewayContext);
+  const { getNotes, saveNote } = useNotesGateway();
 
   const [notes, setNotes] = useState<Note[]>([]);
-  const getNotes = useCallback(async () => {
-    const fetchedNotes = (await notesGateway?.getNotes()) ?? [];
+  const initializeNotes = useCallback(async () => {
+    const fetchedNotes = await getNotes();
     setNotes(fetchedNotes);
-  }, [notesGateway]);
-
-  useEffect(() => {
-    getNotes();
   }, [getNotes]);
 
-  const handleTextNoteSave = useCallback(
+  useEffect(() => {
+    initializeNotes();
+  }, []);
+
+  const handleNoteSave = useCallback(
     async (id: string, title: string) => {
-      await notesGateway?.saveNote(id, title);
-      await getNotes();
+      await saveNote(id, title);
+      await initializeNotes();
     },
-    [notesGateway, getNotes]
+    [saveNote, initializeNotes]
   );
 
   return (
@@ -33,7 +33,7 @@ export const LearningSystemPage: React.FC = () => {
             key={note.id}
             id={note.id}
             title={note.title}
-            onSave={handleTextNoteSave}
+            onSave={handleNoteSave}
           />
         ))}
       </Stack>
