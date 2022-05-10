@@ -29,4 +29,7 @@ export class InMemoryNotesGateway implements NotesGateway {
     const newId = Date.now().toString();
     this.notes.set(newId, { id: newId, title: "" });
   };
+  deleteNote: NotesGateway["deleteNote"] = async (id) => {
+    this.notes.delete(id);
+  };
 }

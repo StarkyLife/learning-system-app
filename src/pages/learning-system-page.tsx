@@ -5,7 +5,7 @@ import { useNotesGateway } from "../gateways/use-notes-gateway";
 import { NoteBlock } from "./note-block";
 
 export const LearningSystemPage: React.FC = () => {
-  const { getNotes, saveNote, createNewNote } = useNotesGateway();
+  const { getNotes, saveNote, createNewNote, deleteNote } = useNotesGateway();
 
   const [notes, setNotes] = useState<Note[]>([]);
   const initializeNotes = useCallback(async () => {
@@ -28,6 +28,13 @@ export const LearningSystemPage: React.FC = () => {
     await createNewNote();
     await initializeNotes();
   }, [createNewNote, initializeNotes]);
+  const handleNoteDelete = useCallback(
+    async (id: string) => {
+      await deleteNote(id);
+      await initializeNotes();
+    },
+    [initializeNotes, deleteNote]
+  );
 
   return (
     <Container maxWidth="md">
@@ -38,6 +45,7 @@ export const LearningSystemPage: React.FC = () => {
             id={note.id}
             title={note.title}
             onSave={handleNoteUpdate}
+            onDelete={handleNoteDelete}
           />
         ))}
         <Button variant="outlined" onClick={handleNewNoteCreate}>

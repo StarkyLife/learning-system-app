@@ -1,14 +1,14 @@
-import { InputBase, Typography } from "@mui/material";
+import { Button, InputBase, Paper, Typography } from "@mui/material";
 import { useCallback, useEffect, useState } from "react";
-import { BlockBase } from "./base-block";
 
 type Props = {
   id: string;
   title: string;
   onSave: (id: string, title: string) => void;
+  onDelete: (id: string) => void;
 };
 
-export const NoteBlock: React.FC<Props> = ({ id, title, onSave }) => {
+export const NoteBlock: React.FC<Props> = ({ id, title, onSave, onDelete }) => {
   const [titleValue, setTitleValue] = useState(title);
 
   useEffect(() => {
@@ -21,12 +21,14 @@ export const NoteBlock: React.FC<Props> = ({ id, title, onSave }) => {
     []
   );
   const handleTitleSave = useCallback(() => {
-    // TODO: debounce?
     onSave(id, titleValue);
   }, [id, titleValue, onSave]);
+  const handleNoteDelete = useCallback(() => {
+    onDelete(id);
+  }, [id, onDelete]);
 
   return (
-    <BlockBase>
+    <Paper variant="outlined">
       <InputBase
         fullWidth
         multiline
@@ -35,6 +37,9 @@ export const NoteBlock: React.FC<Props> = ({ id, title, onSave }) => {
         onBlur={handleTitleSave}
       />
       <Typography>Hidden content</Typography>
-    </BlockBase>
+      <Button variant="text" onClick={handleNoteDelete}>
+        Delete
+      </Button>
+    </Paper>
   );
 };
