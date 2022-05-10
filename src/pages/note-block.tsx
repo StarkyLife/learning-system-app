@@ -6,9 +6,10 @@ type Props = {
   title: string;
   onSave: (id: string, title: string) => void;
   onDelete: (id: string) => void;
+  onOpen: (id: string) => void;
 };
 
-export const NoteBlock: React.FC<Props> = ({ id, title, onSave, onDelete }) => {
+export const NoteBlock: React.FC<Props> = ({ id, title, onSave, onDelete, onOpen }) => {
   const [titleValue, setTitleValue] = useState(title);
 
   useEffect(() => {
@@ -26,6 +27,9 @@ export const NoteBlock: React.FC<Props> = ({ id, title, onSave, onDelete }) => {
   const handleNoteDelete = useCallback(() => {
     onDelete(id);
   }, [id, onDelete]);
+  const handleContentsOpen = useCallback(() => {
+    onOpen(id);
+  }, [id, onOpen]);
 
   return (
     <Paper variant="outlined">
@@ -39,6 +43,9 @@ export const NoteBlock: React.FC<Props> = ({ id, title, onSave, onDelete }) => {
       <Typography>Hidden content</Typography>
       <Button variant="text" onClick={handleNoteDelete}>
         Delete
+      </Button>
+      <Button variant="text" onClick={handleContentsOpen}>
+        Open contents
       </Button>
     </Paper>
   );

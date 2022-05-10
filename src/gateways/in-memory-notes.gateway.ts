@@ -19,15 +19,19 @@ export class InMemoryNotesGateway implements NotesGateway {
     ],
   ]);
 
-  getNotes: NotesGateway["getNotes"] = async () => {
-    return Array.from(this.notes.values());
+  getNotes: NotesGateway["getNotes"] = async (parentId) => {
+    const notes = Array.from(this.notes.values());
+    return notes.filter((n) => n.parentId === parentId);
   };
-  saveNote: NotesGateway["saveNote"] = async (id, title) => {
-    this.notes.set(id, { id, title });
+  getNote: NotesGateway["getNote"] = async (id) => {
+    return this.notes.get(id) || null;
   };
-  createNewNote: NotesGateway["createNewNote"] = async () => {
+  saveNote: NotesGateway["saveNote"] = async (id, title, parentId) => {
+    this.notes.set(id, { id, parentId, title });
+  };
+  createNewNote: NotesGateway["createNewNote"] = async (parentId) => {
     const newId = Date.now().toString();
-    this.notes.set(newId, { id: newId, title: "" });
+    this.notes.set(newId, { id: newId, parentId, title: "" });
   };
   deleteNote: NotesGateway["deleteNote"] = async (id) => {
     this.notes.delete(id);
