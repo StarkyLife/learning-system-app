@@ -1,4 +1,4 @@
-import { Button, InputBase, Paper, Typography } from "@mui/material";
+import { Button, InputBase, Paper } from "@mui/material";
 import { useCallback, useEffect, useState } from "react";
 
 type Props = {
@@ -9,7 +9,13 @@ type Props = {
   onOpen: (id: string) => void;
 };
 
-export const NoteBlock: React.FC<Props> = ({ id, title, onSave, onDelete, onOpen }) => {
+export const NoteBlock: React.FC<Props> = ({
+  id,
+  title,
+  onSave,
+  onDelete,
+  onOpen,
+}) => {
   const [titleValue, setTitleValue] = useState(title);
 
   useEffect(() => {
@@ -40,7 +46,6 @@ export const NoteBlock: React.FC<Props> = ({ id, title, onSave, onDelete, onOpen
         onChange={handleTitleChange}
         onBlur={handleTitleSave}
       />
-      <Typography>Hidden content</Typography>
       <Button variant="text" onClick={handleNoteDelete}>
         Delete
       </Button>
