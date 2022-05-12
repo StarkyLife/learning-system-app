@@ -1,4 +1,6 @@
-import { Button, InputBase, Paper } from "@mui/material";
+import { Divider, Grid, IconButton, InputBase, Paper } from "@mui/material";
+import DeleteIcon from "@mui/icons-material/Delete";
+import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import { useCallback, useEffect, useState } from "react";
 
 type Props = {
@@ -38,20 +40,32 @@ export const NoteBlock: React.FC<Props> = ({
   }, [id, onOpen]);
 
   return (
-    <Paper variant="outlined">
-      <InputBase
-        fullWidth
-        multiline
-        value={titleValue}
-        onChange={handleTitleChange}
-        onBlur={handleTitleSave}
-      />
-      <Button variant="text" onClick={handleNoteDelete}>
-        Delete
-      </Button>
-      <Button variant="text" onClick={handleContentsOpen}>
-        Open contents
-      </Button>
+    <Paper elevation={4}>
+      <Grid container>
+        <Grid item xs p={1}>
+          <InputBase
+            fullWidth
+            multiline
+            placeholder="Напишите что-нибудь..."
+            value={titleValue}
+            onChange={handleTitleChange}
+            onBlur={handleTitleSave}
+            sx={{ height: "100%" }}
+          />
+        </Grid>
+        <Grid item xs="auto">
+          <Divider orientation="vertical" />
+        </Grid>
+        <Grid item xs="auto">
+          <IconButton onClick={handleNoteDelete}>
+            <DeleteIcon />
+          </IconButton>
+          <Divider />
+          <IconButton onClick={handleContentsOpen}>
+            <NavigateNextIcon />
+          </IconButton>
+        </Grid>
+      </Grid>
     </Paper>
   );
 };

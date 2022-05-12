@@ -1,4 +1,5 @@
-import { Button, Container, Stack } from "@mui/material";
+import { Button, Container, IconButton, Stack } from "@mui/material";
+import AddIcon from "@mui/icons-material/Add";
 import { useCallback, useEffect, useState } from "react";
 import { Note } from "../entities/notes";
 import { useNotesGateway } from "../gateways/use-notes-gateway";
@@ -78,9 +79,15 @@ export const LearningSystemPage: React.FC = () => {
             onOpen={handleNoteContentsOpen}
           />
         ))}
-        <Button variant="outlined" onClick={handleNewNoteCreate}>
-          Add new
-        </Button>
+        <div>
+          <IconButton
+            color="primary"
+            size="large"
+            onClick={handleNewNoteCreate}
+          >
+            <AddIcon fontSize="inherit" />
+          </IconButton>
+        </div>
       </Stack>
     </Container>
   );
