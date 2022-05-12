@@ -5,7 +5,7 @@ import { Note } from "../entities/notes";
 import { useNotesGateway } from "../gateways/use-notes-gateway";
 import { NoteBlock } from "./note-block";
 
-export const LearningSystemPage: React.FC = () => {
+export const NotesPage: React.FC = () => {
   const { getNotes, getNote, saveNote, createNewNote, deleteNote } =
     useNotesGateway();
 
