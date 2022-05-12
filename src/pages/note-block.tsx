@@ -5,7 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 
 type Props = {
   id: string;
-  title: string;
+  text: string;
   onSave: (id: string, title: string) => void;
   onDelete: (id: string) => void;
   onOpen: (id: string) => void;
@@ -13,16 +13,16 @@ type Props = {
 
 export const NoteBlock: React.FC<Props> = ({
   id,
-  title,
+  text,
   onSave,
   onDelete,
   onOpen,
 }) => {
-  const [titleValue, setTitleValue] = useState(title);
+  const [titleValue, setTitleValue] = useState(text);
 
   useEffect(() => {
-    setTitleValue(title);
-  }, [title]);
+    setTitleValue(text);
+  }, [text]);
 
   const handleTitleChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) =>

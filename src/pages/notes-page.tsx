@@ -1,89 +1,66 @@
-import { Button, Container, IconButton, Stack } from "@mui/material";
+import {
+  Button,
+  Container,
+  IconButton,
+  Stack,
+  Typography,
+} from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
-import { useCallback, useEffect, useState } from "react";
-import { Note } from "../entities/notes";
-import { useNotesGateway } from "../gateways/use-notes-gateway";
+import { useContext, useEffect, useMemo, useState } from "react";
 import { NoteBlock } from "./note-block";
+import { NotesGatewayContext } from "../gateways/notes.gateway";
+import { NotesController } from "./notes.controller";
+import { DEFAULT_NOTES_VIEW_MODEL } from "./notes.view-model";
+import { createViewModelInteractor } from "../shared/lib/view-model-interactor";
 
 export const NotesPage: React.FC = () => {
-  const { getNotes, getNote, saveNote, createNewNote, deleteNote } =
-    useNotesGateway();
+  const notesGateway = useContext(NotesGatewayContext);
+  if (!notesGateway) throw new Error("NotesGateway have not been connected!");
 
-  const [currentParentId, setParentId] = useState<string | undefined>();
-  const [notes, setNotes] = useState<Note[]>([]);
-  const refreshNotes = useCallback(async () => {
-    const fetchedNotes = await getNotes(currentParentId);
-    setNotes(fetchedNotes);
-  }, [getNotes, currentParentId]);
-  const openNewNotes = useCallback(
-    async (parentId: string | undefined) => {
-      const fetchedNotes = await getNotes(parentId);
-      setParentId(parentId);
-      setNotes(fetchedNotes);
-    },
-    [getNotes]
+  const [viewModel, setViewModel] = useState(DEFAULT_NOTES_VIEW_MODEL);
+
+  const notInitializedController = useMemo(() => new NotesController(), []);
+  const controller = useMemo(
+    () =>
+      notInitializedController.setDependencies({
+        notesGateway,
+        viewModel: createViewModelInteractor(viewModel, setViewModel),
+      }),
+    [notInitializedController, notesGateway, viewModel]
   );
 
   useEffect(() => {
-    openNewNotes(currentParentId);
-  }, []);
+    controller.init();
+  }, [controller]);
 
-  const handleNoteUpdate = useCallback(
-    async (id: string, title: string) => {
-      await saveNote(id, title, currentParentId);
-      await refreshNotes();
-    },
-    [saveNote, refreshNotes, currentParentId]
-  );
-  const handleNewNoteCreate = useCallback(async () => {
-    await createNewNote(currentParentId);
-    await refreshNotes();
-  }, [createNewNote, refreshNotes, currentParentId]);
-  const handleNoteDelete = useCallback(
-    async (id: string) => {
-      await deleteNote(id);
-      await refreshNotes();
-    },
-    [refreshNotes, deleteNote]
-  );
-  const handleNoteContentsOpen = useCallback(
-    async (id: string) => {
-      await openNewNotes(id);
-    },
-    [openNewNotes]
-  );
-  const handleGoingUp = useCallback(async () => {
-    if (!currentParentId) throw new Error("There is no upper level notes!");
-    const note = await getNote(currentParentId);
-    if (!note)
-      throw new Error(`Couldn't find note with id = ${currentParentId}`);
-
-    await openNewNotes(note.parentId);
-  }, [openNewNotes, getNote, currentParentId]);
+  if (!viewModel.currentNote) {
+    return <div>Not ready</div>;
+  }
 
   return (
     <Container maxWidth="md">
-      {currentParentId && (
-        <Button variant="text" onClick={handleGoingUp}>
+      {viewModel.currentNote.parentId && (
+        <Button variant="text" onClick={controller.goUp}>
           Back
         </Button>
       )}
+      <Typography noWrap>{viewModel.currentNote.text}</Typography>
       <Stack spacing={2}>
-        {notes.map((note) => (
+        {viewModel.currentNote.content.map((note) => (
           <NoteBlock
             key={note.id}
             id={note.id}
-            title={note.title}
-            onSave={handleNoteUpdate}
-            onDelete={handleNoteDelete}
-            onOpen={handleNoteContentsOpen}
+            text={note.text}
+            onSave={controller.saveNote}
+            onDelete={controller.deleteNote}
+            onOpen={controller.openNote}
           />
         ))}
         <div>
           <IconButton
             color="primary"
             size="large"
-            onClick={handleNewNoteCreate}
+            onClick={controller.createNote}
           >
             <AddIcon fontSize="inherit" />
           </IconButton>

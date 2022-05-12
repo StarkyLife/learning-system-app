@@ -1,5 +1,11 @@
-export type Note = {
+export type ShortNote = {
+  id: string;
+  text: string;
+};
+
+export type NoteView = {
   id: string;
   parentId?: string;
-  title: string;
+  text: string;
+  content: ShortNote[];
 };

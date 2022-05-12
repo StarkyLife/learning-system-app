@@ -1,15 +1,15 @@
 import React from "react";
-import { Note } from "../entities/notes";
+import { NoteView } from "../entities/notes";
 
 export interface NotesGateway {
-  getNotes(parentId: string | undefined): Promise<Note[]>;
-  getNote(id: string): Promise<Note | null>;
+  getMainNote(): Promise<NoteView>;
+  getNote(id: string): Promise<NoteView | null>;
   saveNote(
     id: string,
     title: string,
-    parentId: string | undefined
+    parentId: string
   ): Promise<void>;
-  createNewNote(parentId: string | undefined): Promise<void>;
+  createNewNote(parentId: string): Promise<void>;
   deleteNote(id: string): Promise<void>;
 }
 
