@@ -2,6 +2,7 @@ import { Divider, Grid, IconButton, InputBase, Paper } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import { useCallback, useEffect, useState } from "react";
+import { throttle } from "../shared/lib/throttle";
 
 type Props = {
   id: string;
@@ -39,8 +40,27 @@ export const NoteBlock: React.FC<Props> = ({
     onOpen(id);
   }, [id, onOpen]);
 
+  const [isHoveredByOtherBlock, setHoveredByOtherBlock] = useState(false);
+  const handleDragOver = useCallback(
+    throttle(() => {
+      setHoveredByOtherBlock(true);
+    }, 300),
+    []
+  );
+  const handleDragLeave = useCallback(() => {
+    setHoveredByOtherBlock(false);
+  }, []);
+
   return (
-    <Paper elevation={4}>
+    <Paper
+      elevation={4}
+      sx={{
+        opacity: isHoveredByOtherBlock ? 0.1 : 1,
+      }}
+      draggable
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+    >
       <Grid container>
         <Grid item xs p={1}>
           <InputBase
