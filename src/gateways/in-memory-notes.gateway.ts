@@ -1,6 +1,6 @@
 import { NotesGateway } from "./notes.gateway";
 
-const MAIN_ID = 'main';
+const MAIN_ID = "main";
 
 type DbNote = {
   id: string;
@@ -71,5 +71,9 @@ export class InMemoryNotesGateway implements NotesGateway {
   };
   deleteNote: NotesGateway["deleteNote"] = async (id) => {
     this.notes.delete(id);
+
+    const notes = Array.from(this.notes.values());
+    const childNotes = notes.filter((n) => n.parentId === id);
+    childNotes.forEach((n) => this.deleteNote(n.id));
   };
 }
