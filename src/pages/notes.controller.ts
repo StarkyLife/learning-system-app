@@ -52,17 +52,22 @@ export class NotesController {
     await this.refreshCurrentNote();
   };
 
-  saveNote = async (id: string, title: string) => {
+  saveNote = async (id: string, text: string) => {
     const { currentNote } = this.deps.viewModel.get();
     if (!currentNote) {
       throw new Error("App wasn't initialized!");
     }
-    await this.deps.notesGateway.saveNote(id, title, currentNote.id);
+    await this.deps.notesGateway.saveNote(id, currentNote.id, text);
     await this.refreshCurrentNote();
   };
 
   deleteNote = async (id: string) => {
     await this.deps.notesGateway.deleteNote(id);
+    await this.refreshCurrentNote();
+  };
+
+  changeParent = async (id: string, newParentId: string) => {
+    await this.deps.notesGateway.saveNote(id, newParentId);
     await this.refreshCurrentNote();
   };
 

@@ -1,8 +1,16 @@
 import { Divider, Grid, IconButton, InputBase, Paper } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";
-import { useCallback, useEffect, useState } from "react";
+import {
+  DragEventHandler,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { throttle } from "../shared/lib/throttle";
+
+const DRAG_TRANSFER_DATA_KEY = "noteId";
 
 type Props = {
   id: string;
@@ -10,6 +18,7 @@ type Props = {
   onSave: (id: string, title: string) => void;
   onDelete: (id: string) => void;
   onOpen: (id: string) => void;
+  onChangeParent: (id: string, newParentId: string) => void;
 };
 
 export const NoteBlock: React.FC<Props> = ({
@@ -18,21 +27,22 @@ export const NoteBlock: React.FC<Props> = ({
   onSave,
   onDelete,
   onOpen,
+  onChangeParent,
 }) => {
-  const [titleValue, setTitleValue] = useState(text);
+  const [textValue, setTextValue] = useState(text);
 
   useEffect(() => {
-    setTitleValue(text);
+    setTextValue(text);
   }, [text]);
 
-  const handleTitleChange = useCallback(
+  const handleTextChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) =>
-      setTitleValue(e.target.value),
+      setTextValue(e.target.value),
     []
   );
-  const handleTitleSave = useCallback(() => {
-    onSave(id, titleValue);
-  }, [id, titleValue, onSave]);
+  const handleTextSave = useCallback(() => {
+    onSave(id, textValue);
+  }, [id, textValue, onSave]);
   const handleNoteDelete = useCallback(() => {
     onDelete(id);
   }, [id, onDelete]);
@@ -41,25 +51,55 @@ export const NoteBlock: React.FC<Props> = ({
   }, [id, onOpen]);
 
   const [isHoveredByOtherBlock, setHoveredByOtherBlock] = useState(false);
-  const handleDragOver = useCallback(
-    throttle(() => {
-      setHoveredByOtherBlock(true);
-    }, 300),
+  const [isDragged, setDragged] = useState(false);
+  const setHoveredByOtherBlockThrottled = useMemo(
+    () => throttle(setHoveredByOtherBlock, 300),
     []
   );
-  const handleDragLeave = useCallback(() => {
+  const handleDragStart = useCallback<DragEventHandler<HTMLDivElement>>(
+    (e) => {
+      setDragged(true);
+      e.dataTransfer.setData(DRAG_TRANSFER_DATA_KEY, id);
+    },
+    [id]
+  );
+  const handleDragEnd = useCallback<DragEventHandler<HTMLDivElement>>(() => {
+    setDragged(false);
+  }, []);
+  const handleDragOver = useCallback<DragEventHandler<HTMLDivElement>>(
+    (e) => {
+      e.preventDefault();
+      setHoveredByOtherBlockThrottled(true);
+    },
+    [id]
+  );
+  const handleDragLeave = useCallback<DragEventHandler<HTMLDivElement>>(() => {
     setHoveredByOtherBlock(false);
   }, []);
+  const handleDrop = useCallback<DragEventHandler<HTMLDivElement>>(
+    (e) => {
+      e.preventDefault();
+      setHoveredByOtherBlock(false);
+      const draggedId = e.dataTransfer?.getData(DRAG_TRANSFER_DATA_KEY);
+      if (draggedId === id) return;
+      onChangeParent(draggedId, id);
+    },
+    [onChangeParent, id]
+  );
 
   return (
     <Paper
+      component="div"
       elevation={4}
       sx={{
-        opacity: isHoveredByOtherBlock ? 0.1 : 1,
+        opacity: isDragged ? 0 : isHoveredByOtherBlock ? 0.1 : 1,
       }}
       draggable
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
     >
       <Grid container>
         <Grid item xs p={1}>
@@ -67,9 +107,9 @@ export const NoteBlock: React.FC<Props> = ({
             fullWidth
             multiline
             placeholder="Напишите что-нибудь..."
-            value={titleValue}
-            onChange={handleTitleChange}
-            onBlur={handleTitleSave}
+            value={textValue}
+            onChange={handleTextChange}
+            onBlur={handleTextSave}
             sx={{ height: "100%" }}
           />
         </Grid>

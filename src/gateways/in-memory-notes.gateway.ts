@@ -62,8 +62,13 @@ export class InMemoryNotesGateway implements NotesGateway {
       })),
     };
   };
-  saveNote: NotesGateway["saveNote"] = async (id, text, parentId) => {
-    this.notes.set(id, { id, parentId, text });
+  saveNote: NotesGateway["saveNote"] = async (id, parentId, text) => {
+    const current = this.notes.get(id);
+    this.notes.set(id, {
+      id,
+      parentId,
+      text: text || current?.text || "",
+    });
   };
   createNewNote: NotesGateway["createNewNote"] = async (parentId) => {
     const newId = Date.now().toString();

@@ -54,6 +54,7 @@ export const NotesPage: React.FC = () => {
             onSave={controller.saveNote}
             onDelete={controller.deleteNote}
             onOpen={controller.openNote}
+            onChangeParent={controller.changeParent}
           />
         ))}
         <div>
