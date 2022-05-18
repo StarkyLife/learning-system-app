@@ -1,4 +1,5 @@
 import { NoteView, ShortNote } from "../entities/notes";
+import { NotesGateway } from "../gateways/notes.gateway";
 import { createViewModelInteractorMock } from "../shared/lib/view-model-interactor-mock";
 import { NotesController } from "./notes.controller-new";
 import { NotesViewModel } from "./notes.view-model";
@@ -11,14 +12,29 @@ const MAIN_EMPTY_NOTE: NoteView = {
 
 const APP_NOT_INITIALIZED_ERROR = new Error("Notes weren't initialized!");
 
-const createController = (initialViewModel: NotesViewModel) => {
+const createController = (
+  initialViewModel: NotesViewModel,
+  deps: {
+    notesGateway?: Partial<NotesGateway>;
+  } = {}
+) => {
   const viewModelInteractorMock =
     createViewModelInteractorMock(initialViewModel);
+
+  const notesGatewayMock: NotesGateway = {
+    getMainNote: deps.notesGateway?.getMainNote || jest.fn(),
+    getNote: deps.notesGateway?.getNote || jest.fn(),
+    saveNote: deps.notesGateway?.saveNote || jest.fn(),
+    createNewNote: deps.notesGateway?.createNewNote || jest.fn(),
+    deleteNote: deps.notesGateway?.deleteNote || jest.fn(),
+  };
+
   const controller = new NotesController().setDependencies({
     viewModel: viewModelInteractorMock,
+    notesGateway: notesGatewayMock,
   });
 
-  return { controller, viewModelInteractorMock };
+  return { controller, viewModelInteractorMock, notesGatewayMock };
 };
 
 describe("Initialization", () => {
@@ -26,9 +42,16 @@ describe("Initialization", () => {
     const INITIAL_VIEW_MODEL: NotesViewModel = {
       currentNote: null,
     };
+    const getMainNoteMock = jest.fn().mockResolvedValue(MAIN_EMPTY_NOTE);
 
-    const { controller, viewModelInteractorMock } =
-      createController(INITIAL_VIEW_MODEL);
+    const { controller, viewModelInteractorMock } = createController(
+      INITIAL_VIEW_MODEL,
+      {
+        notesGateway: {
+          getMainNote: getMainNoteMock,
+        },
+      }
+    );
 
     await controller.init();
 

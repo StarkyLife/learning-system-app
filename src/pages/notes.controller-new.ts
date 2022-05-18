@@ -1,8 +1,10 @@
+import { NotesGateway } from "../gateways/notes.gateway";
 import { ViewModelInteractor } from "../shared/lib/view-model-interactor";
 import { NotesViewModel } from "./notes.view-model";
 
 export type NotesControllerDeps = {
   viewModel: ViewModelInteractor<NotesViewModel>;
+  notesGateway: NotesGateway;
 };
 
 export class NotesController {
@@ -14,12 +16,9 @@ export class NotesController {
   }
 
   init = async () => {
+    const mainNote = await this.deps.notesGateway.getMainNote();
     this.deps.viewModel.update({
-      currentNote: {
-        id: "main",
-        text: "Main",
-        content: [],
-      },
+      currentNote: mainNote,
     });
   };
 
