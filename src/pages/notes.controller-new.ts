@@ -59,6 +59,17 @@ export class NotesController {
     });
   };
 
+  deleteChildNote = async (childNoteId: string) => {
+    const currentNote = this.getCurrentNote();
+
+    this.deps.viewModel.update({
+      currentNote: {
+        ...currentNote,
+        content: currentNote.content.filter((n) => n.id !== childNoteId),
+      },
+    });
+  };
+
   private getCurrentNote() {
     const { currentNote } = this.deps.viewModel.get();
 

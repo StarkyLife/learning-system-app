@@ -76,18 +76,6 @@ describe("Adding new child note", () => {
 });
 
 describe("Saving child note's text", () => {
-  it("should throw an error if current note is not initialized", async () => {
-    const INITIAL_VIEW_MODEL: NotesViewModel = {
-      currentNote: null,
-    };
-
-    const { controller } = createController(INITIAL_VIEW_MODEL);
-
-    await expect(controller.saveChildNote("id", "text")).rejects.toEqual(
-      APP_NOT_INITIALIZED_ERROR
-    );
-  });
-
   it("should throw an error if child note was not found", async () => {
     const INITIAL_VIEW_MODEL: NotesViewModel = {
       currentNote: MAIN_EMPTY_NOTE,
@@ -128,6 +116,30 @@ describe("Saving child note's text", () => {
           },
         ],
       },
+    });
+  });
+});
+
+describe("Deleting child note", () => {
+  it("should delete child note from main", async () => {
+    const CHILD_NOTE: ShortNote = {
+      id: "child-id",
+      text: "",
+    };
+    const INITIAL_VIEW_MODEL: NotesViewModel = {
+      currentNote: {
+        ...MAIN_EMPTY_NOTE,
+        content: [CHILD_NOTE],
+      },
+    };
+
+    const { controller, viewModelInteractorMock } =
+      createController(INITIAL_VIEW_MODEL);
+
+    await controller.deleteChildNote(CHILD_NOTE.id);
+
+    expect(viewModelInteractorMock.get()).toEqual<NotesViewModel>({
+      currentNote: MAIN_EMPTY_NOTE,
     });
   });
 });
