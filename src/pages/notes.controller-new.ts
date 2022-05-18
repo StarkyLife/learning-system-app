@@ -22,15 +22,8 @@ export class NotesController {
     });
   };
 
-  openChildNote = async (childNoteId: string) => {
-    const note = await this.deps.notesGateway.getNote(childNoteId);
-    this.deps.viewModel.update({
-      currentNote: note,
-    });
-  };
-
   addChildNote = async () => {
-    const currentNote = this.getCurrentNote();
+    const currentNote = this.tryGetCurrentNote();
 
     const newId = Date.now().toString();
     this.deps.viewModel.update({
@@ -42,7 +35,7 @@ export class NotesController {
   };
 
   saveChildNote = async (childNoteId: string, text: string) => {
-    const currentNote = this.getCurrentNote();
+    const currentNote = this.tryGetCurrentNote();
 
     const childNoteIdx = currentNote.content.findIndex(
       (n) => n.id === childNoteId
@@ -66,7 +59,7 @@ export class NotesController {
   };
 
   deleteChildNote = async (childNoteId: string) => {
-    const currentNote = this.getCurrentNote();
+    const currentNote = this.tryGetCurrentNote();
 
     this.deps.viewModel.update({
       currentNote: {
@@ -76,13 +69,41 @@ export class NotesController {
     });
   };
 
-  private getCurrentNote() {
-    const { currentNote } = this.deps.viewModel.get();
+  openChildNote = async (childNoteId: string) => {
+    const note = await this.tryGetNoteWith(childNoteId);
 
+    this.deps.viewModel.update({
+      currentNote: note,
+    });
+  };
+
+  goToUpperLevel = async () => {
+    const currentNote = this.tryGetCurrentNote();
+
+    if (!currentNote.parentId) {
+      throw new Error("There is no upper level notes!");
+    }
+
+    const note = await this.tryGetNoteWith(currentNote.parentId);
+
+    this.deps.viewModel.update({
+      currentNote: note,
+    });
+  };
+
+  private tryGetCurrentNote() {
+    const { currentNote } = this.deps.viewModel.get();
     if (!currentNote) {
       throw new Error("Notes weren't initialized!");
     }
-
     return currentNote;
+  }
+
+  private async tryGetNoteWith(id: string) {
+    const note = await this.deps.notesGateway.getNote(id);
+    if (!note) {
+      throw new Error(`Couldn't find note with id = ${id}`);
+    }
+    return note;
   }
 }

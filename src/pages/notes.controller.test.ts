@@ -4,6 +4,11 @@ import { createViewModelInteractorMock } from "../shared/lib/view-model-interact
 import { NotesController } from "./notes.controller-new";
 import { NotesViewModel } from "./notes.view-model";
 
+// TODO:
+// - change parent
+// - save, delete in Gateway
+// - change content ordering
+
 const createController = (
   initialViewModel: NotesViewModel,
   deps: {
@@ -164,24 +169,96 @@ it("should delete child note from main", async () => {
   });
 });
 
-it("should open child note content", async () => {
-  const INITIAL_VIEW_MODEL: NotesViewModel = {
-    currentNote: MAIN_EMPTY_NOTE,
-  };
-  const getNoteMock = jest.fn().mockResolvedValue(CHILD_NOTE);
+describe("Opening child content", () => {
+  it("should throw an error if it can't find note with given id", async () => {
+    const INITIAL_VIEW_MODEL: NotesViewModel = {
+      currentNote: MAIN_EMPTY_NOTE,
+    };
+    const getNoteMock = jest.fn().mockResolvedValue(null);
 
-  const { controller, viewModelInteractorMock } = createController(
-    INITIAL_VIEW_MODEL,
-    {
+    const { controller } = createController(INITIAL_VIEW_MODEL, {
       notesGateway: {
         getNote: getNoteMock,
       },
-    }
-  );
+    });
 
-  await controller.openChildNote(CHILD_NOTE.id);
+    await expect(controller.openChildNote(CHILD_NOTE.id)).rejects.toEqual(
+      new Error(`Couldn't find note with id = ${CHILD_NOTE.id}`)
+    );
+  });
 
-  expect(viewModelInteractorMock.get()).toEqual<NotesViewModel>({
-    currentNote: CHILD_NOTE,
+  it("should open child note content", async () => {
+    const INITIAL_VIEW_MODEL: NotesViewModel = {
+      currentNote: MAIN_EMPTY_NOTE,
+    };
+    const getNoteMock = jest.fn().mockResolvedValue(CHILD_NOTE);
+
+    const { controller, viewModelInteractorMock } = createController(
+      INITIAL_VIEW_MODEL,
+      {
+        notesGateway: {
+          getNote: getNoteMock,
+        },
+      }
+    );
+
+    await controller.openChildNote(CHILD_NOTE.id);
+
+    expect(viewModelInteractorMock.get()).toEqual<NotesViewModel>({
+      currentNote: CHILD_NOTE,
+    });
+  });
+});
+
+describe("Going back to upper levels", () => {
+  it("should throw an error if the current note is the main one", async () => {
+    const INITIAL_VIEW_MODEL: NotesViewModel = {
+      currentNote: MAIN_EMPTY_NOTE,
+    };
+
+    const { controller } = createController(INITIAL_VIEW_MODEL);
+
+    await expect(controller.goToUpperLevel()).rejects.toEqual(
+      new Error("There is no upper level notes!")
+    );
+  });
+
+  it("should throw an error if it can't find note with given id", async () => {
+    const INITIAL_VIEW_MODEL: NotesViewModel = {
+      currentNote: CHILD_NOTE,
+    };
+    const getNoteMock = jest.fn().mockResolvedValue(null);
+
+    const { controller } = createController(INITIAL_VIEW_MODEL, {
+      notesGateway: {
+        getNote: getNoteMock,
+      },
+    });
+
+    await expect(controller.goToUpperLevel()).rejects.toEqual(
+      new Error(`Couldn't find note with id = ${CHILD_NOTE.parentId}`)
+    );
+  });
+
+  it("should open parent note", async () => {
+    const INITIAL_VIEW_MODEL: NotesViewModel = {
+      currentNote: CHILD_NOTE,
+    };
+    const getNoteMock = jest.fn().mockResolvedValue(MAIN_EMPTY_NOTE);
+
+    const { controller, viewModelInteractorMock } = createController(
+      INITIAL_VIEW_MODEL,
+      {
+        notesGateway: {
+          getNote: getNoteMock,
+        },
+      }
+    );
+
+    await controller.goToUpperLevel();
+
+    expect(viewModelInteractorMock.get()).toEqual<NotesViewModel>({
+      currentNote: MAIN_EMPTY_NOTE,
+    });
   });
 });
