@@ -16,9 +16,16 @@ export class NotesController {
   }
 
   init = async () => {
-    const mainNote = await this.deps.notesGateway.getMainNote();
+    const note = await this.deps.notesGateway.getMainNote();
     this.deps.viewModel.update({
-      currentNote: mainNote,
+      currentNote: note,
+    });
+  };
+
+  openChildNote = async (childNoteId: string) => {
+    const note = await this.deps.notesGateway.getNote(childNoteId);
+    this.deps.viewModel.update({
+      currentNote: note,
     });
   };
 

@@ -4,14 +4,6 @@ import { createViewModelInteractorMock } from "../shared/lib/view-model-interact
 import { NotesController } from "./notes.controller-new";
 import { NotesViewModel } from "./notes.view-model";
 
-const MAIN_EMPTY_NOTE: NoteView = {
-  id: "main",
-  text: "Main",
-  content: [],
-};
-
-const APP_NOT_INITIALIZED_ERROR = new Error("Notes weren't initialized!");
-
 const createController = (
   initialViewModel: NotesViewModel,
   deps: {
@@ -37,27 +29,42 @@ const createController = (
   return { controller, viewModelInteractorMock, notesGatewayMock };
 };
 
-describe("Initialization", () => {
-  it("should init view model with main note", async () => {
-    const INITIAL_VIEW_MODEL: NotesViewModel = {
-      currentNote: null,
-    };
-    const getMainNoteMock = jest.fn().mockResolvedValue(MAIN_EMPTY_NOTE);
+const MAIN_EMPTY_NOTE: NoteView = {
+  id: "main",
+  text: "Main",
+  content: [],
+};
+const SHORT_CHILD_NOTE: ShortNote = {
+  id: "child-id",
+  text: "",
+};
+const CHILD_NOTE: NoteView = {
+  ...SHORT_CHILD_NOTE,
+  parentId: MAIN_EMPTY_NOTE.id,
+  content: [],
+};
 
-    const { controller, viewModelInteractorMock } = createController(
-      INITIAL_VIEW_MODEL,
-      {
-        notesGateway: {
-          getMainNote: getMainNoteMock,
-        },
-      }
-    );
+const APP_NOT_INITIALIZED_ERROR = new Error("Notes weren't initialized!");
 
-    await controller.init();
+it("should init view model with main note", async () => {
+  const INITIAL_VIEW_MODEL: NotesViewModel = {
+    currentNote: null,
+  };
+  const getMainNoteMock = jest.fn().mockResolvedValue(MAIN_EMPTY_NOTE);
 
-    expect(viewModelInteractorMock.get()).toEqual<NotesViewModel>({
-      currentNote: MAIN_EMPTY_NOTE,
-    });
+  const { controller, viewModelInteractorMock } = createController(
+    INITIAL_VIEW_MODEL,
+    {
+      notesGateway: {
+        getMainNote: getMainNoteMock,
+      },
+    }
+  );
+
+  await controller.init();
+
+  expect(viewModelInteractorMock.get()).toEqual<NotesViewModel>({
+    currentNote: MAIN_EMPTY_NOTE,
   });
 });
 
@@ -113,28 +120,24 @@ describe("Saving child note's text", () => {
 
   it("should save child text", async () => {
     const TEXT_TO_SAVE = "child note text to save";
-    const CHILD_NOTE: ShortNote = {
-      id: "child-id",
-      text: "",
-    };
     const INITIAL_VIEW_MODEL: NotesViewModel = {
       currentNote: {
         ...MAIN_EMPTY_NOTE,
-        content: [CHILD_NOTE],
+        content: [SHORT_CHILD_NOTE],
       },
     };
 
     const { controller, viewModelInteractorMock } =
       createController(INITIAL_VIEW_MODEL);
 
-    await controller.saveChildNote(CHILD_NOTE.id, TEXT_TO_SAVE);
+    await controller.saveChildNote(SHORT_CHILD_NOTE.id, TEXT_TO_SAVE);
 
     expect(viewModelInteractorMock.get()).toEqual<NotesViewModel>({
       currentNote: {
         ...MAIN_EMPTY_NOTE,
         content: [
           {
-            ...CHILD_NOTE,
+            ...SHORT_CHILD_NOTE,
             text: TEXT_TO_SAVE,
           },
         ],
@@ -143,26 +146,42 @@ describe("Saving child note's text", () => {
   });
 });
 
-describe("Deleting child note", () => {
-  it("should delete child note from main", async () => {
-    const CHILD_NOTE: ShortNote = {
-      id: "child-id",
-      text: "",
-    };
-    const INITIAL_VIEW_MODEL: NotesViewModel = {
-      currentNote: {
-        ...MAIN_EMPTY_NOTE,
-        content: [CHILD_NOTE],
+it("should delete child note from main", async () => {
+  const INITIAL_VIEW_MODEL: NotesViewModel = {
+    currentNote: {
+      ...MAIN_EMPTY_NOTE,
+      content: [SHORT_CHILD_NOTE],
+    },
+  };
+
+  const { controller, viewModelInteractorMock } =
+    createController(INITIAL_VIEW_MODEL);
+
+  await controller.deleteChildNote(SHORT_CHILD_NOTE.id);
+
+  expect(viewModelInteractorMock.get()).toEqual<NotesViewModel>({
+    currentNote: MAIN_EMPTY_NOTE,
+  });
+});
+
+it("should open child note content", async () => {
+  const INITIAL_VIEW_MODEL: NotesViewModel = {
+    currentNote: MAIN_EMPTY_NOTE,
+  };
+  const getNoteMock = jest.fn().mockResolvedValue(CHILD_NOTE);
+
+  const { controller, viewModelInteractorMock } = createController(
+    INITIAL_VIEW_MODEL,
+    {
+      notesGateway: {
+        getNote: getNoteMock,
       },
-    };
+    }
+  );
 
-    const { controller, viewModelInteractorMock } =
-      createController(INITIAL_VIEW_MODEL);
+  await controller.openChildNote(CHILD_NOTE.id);
 
-    await controller.deleteChildNote(CHILD_NOTE.id);
-
-    expect(viewModelInteractorMock.get()).toEqual<NotesViewModel>({
-      currentNote: MAIN_EMPTY_NOTE,
-    });
+  expect(viewModelInteractorMock.get()).toEqual<NotesViewModel>({
+    currentNote: CHILD_NOTE,
   });
 });
