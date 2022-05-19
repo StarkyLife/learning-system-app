@@ -1,3 +1,4 @@
+import { NoteView } from "../entities/notes";
 import { NotesGateway } from "../gateways/notes.gateway";
 import { ViewModelInteractor } from "../shared/lib/view-model-interactor";
 import { NotesViewModel } from "./notes.view-model";
@@ -26,12 +27,15 @@ export class NotesController {
     const currentNote = this.tryGetCurrentNote();
 
     const newId = Date.now().toString();
+    const updatedNote: NoteView = {
+      ...currentNote,
+      content: [...currentNote.content, { id: newId, text: "" }],
+    };
+
     this.deps.viewModel.update({
-      currentNote: {
-        ...currentNote,
-        content: [...currentNote.content, { id: newId, text: "" }],
-      },
+      currentNote: updatedNote,
     });
+    await this.deps.notesGateway.saveNote(updatedNote);
   };
 
   saveChildNote = async (childNoteId: string, text: string) => {
@@ -49,13 +53,15 @@ export class NotesController {
       ...updatedNoteContent[childNoteIdx],
       text,
     };
+    const updatedNote = {
+      ...currentNote,
+      content: updatedNoteContent,
+    };
 
     this.deps.viewModel.update({
-      currentNote: {
-        ...currentNote,
-        content: updatedNoteContent,
-      },
+      currentNote: updatedNote,
     });
+    await this.deps.notesGateway.saveNote(updatedNote);
   };
 
   deleteChildNote = async (childNoteId: string) => {

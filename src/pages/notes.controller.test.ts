@@ -1,17 +1,20 @@
 import { NoteView, ShortNote } from "../entities/notes";
-import { InMemoryNotesGateway } from "../gateways/in-memory-notes.gateway";
+import {
+  InMemoryDbNote,
+  InMemoryNotesGateway,
+} from "../gateways/in-memory-notes.gateway";
 import { createViewModelInteractorMock } from "../shared/lib/view-model-interactor-mock";
 import { NotesController } from "./notes.controller";
 import { NotesViewModel } from "./notes.view-model";
 
 // TODO:
-// - save, delete in Gateway
+// - delete in Gateway
 // - change parent
 // - change content ordering
 
 const createController = (
   initialViewModel: NotesViewModel,
-  initialGatewayNotes: NoteView[] = []
+  initialGatewayNotes: InMemoryDbNote[] = []
 ) => {
   const viewModelInteractorMock =
     createViewModelInteractorMock(initialViewModel);
@@ -42,6 +45,11 @@ const MAIN_NOTE_WITH_CHILD: NoteView = {
 const CHILD_NOTE: NoteView = {
   ...SHORT_CHILD_NOTE,
   parentId: MAIN_EMPTY_NOTE.id,
+  content: [],
+};
+const DB_CHILD_NOTE: InMemoryDbNote = {
+  id: CHILD_NOTE.id,
+  text: CHILD_NOTE.text,
   content: [],
 };
 
@@ -80,22 +88,51 @@ describe("Adding new child note", () => {
       currentNote: MAIN_EMPTY_NOTE,
     };
 
-    const { controller, viewModelInteractorMock } =
+    const { controller, viewModelInteractorMock, notesGateway } =
       createController(INITIAL_VIEW_MODEL);
 
     await controller.addChildNote();
 
+    const expected = {
+      ...MAIN_EMPTY_NOTE,
+      content: [
+        {
+          id: expect.any(String),
+          text: "",
+        },
+      ],
+    };
     expect(viewModelInteractorMock.get()).toEqual<NotesViewModel>({
-      currentNote: {
-        ...MAIN_EMPTY_NOTE,
-        content: [
-          {
-            id: expect.any(String),
-            text: "",
-          },
-        ],
-      },
+      currentNote: expected,
     });
+    const noteFromGateway = await notesGateway.getMainNote();
+    expect(noteFromGateway).toEqual(expected);
+  });
+
+  it("should add new note to mid-level note", async () => {
+    const INITIAL_VIEW_MODEL: NotesViewModel = {
+      currentNote: CHILD_NOTE,
+    };
+
+    const { controller, viewModelInteractorMock, notesGateway } =
+      createController(INITIAL_VIEW_MODEL, [DB_CHILD_NOTE]);
+
+    await controller.addChildNote();
+
+    const expected = {
+      ...CHILD_NOTE,
+      content: [
+        {
+          id: expect.any(String),
+          text: "",
+        },
+      ],
+    };
+    expect(viewModelInteractorMock.get()).toEqual<NotesViewModel>({
+      currentNote: expected,
+    });
+    const noteFromGateway = await notesGateway.getNote(CHILD_NOTE.id);
+    expect(noteFromGateway).toEqual(expected);
   });
 });
 
@@ -118,22 +155,25 @@ describe("Saving child note's text", () => {
       currentNote: MAIN_NOTE_WITH_CHILD,
     };
 
-    const { controller, viewModelInteractorMock } =
-      createController(INITIAL_VIEW_MODEL);
+    const { controller, viewModelInteractorMock, notesGateway } =
+      createController(INITIAL_VIEW_MODEL, [DB_CHILD_NOTE]);
 
     await controller.saveChildNote(SHORT_CHILD_NOTE.id, TEXT_TO_SAVE);
 
+    const expected = {
+      ...MAIN_EMPTY_NOTE,
+      content: [
+        {
+          ...SHORT_CHILD_NOTE,
+          text: TEXT_TO_SAVE,
+        },
+      ],
+    };
     expect(viewModelInteractorMock.get()).toEqual<NotesViewModel>({
-      currentNote: {
-        ...MAIN_EMPTY_NOTE,
-        content: [
-          {
-            ...SHORT_CHILD_NOTE,
-            text: TEXT_TO_SAVE,
-          },
-        ],
-      },
+      currentNote: expected,
     });
+    const noteFromGateway = await notesGateway.getMainNote();
+    expect(noteFromGateway).toEqual(expected);
   });
 });
 
@@ -172,7 +212,7 @@ describe("Opening child content", () => {
 
     const { controller, viewModelInteractorMock } = createController(
       INITIAL_VIEW_MODEL,
-      [CHILD_NOTE]
+      [DB_CHILD_NOTE]
     );
 
     await controller.openChildNote(CHILD_NOTE.id);
@@ -207,9 +247,7 @@ describe("Going back to upper levels", () => {
       currentNote: THIRD_LEVEL_NOTE,
     };
 
-    const { controller } = createController(INITIAL_VIEW_MODEL, [
-      THIRD_LEVEL_NOTE,
-    ]);
+    const { controller } = createController(INITIAL_VIEW_MODEL);
 
     await expect(controller.goToUpperLevel()).rejects.toEqual(
       new Error(`Couldn't find note with id = ${THIRD_LEVEL_NOTE.parentId}`)
@@ -223,7 +261,7 @@ describe("Going back to upper levels", () => {
 
     const { controller, viewModelInteractorMock } = createController(
       INITIAL_VIEW_MODEL,
-      [CHILD_NOTE]
+      [DB_CHILD_NOTE]
     );
 
     await controller.goToUpperLevel();
