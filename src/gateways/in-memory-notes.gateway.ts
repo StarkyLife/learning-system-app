@@ -10,13 +10,23 @@ export type InMemoryDbNote = {
 };
 
 export class InMemoryNotesGateway implements NotesGateway {
-  constructor(private notes: InMemoryDbNote[]) {}
+  private notes: Map<string, InMemoryDbNote>;
+
+  constructor(dbNotes: InMemoryDbNote[]) {
+    this.notes = new Map(dbNotes.map((n) => [n.id, n]));
+  }
+
+  private getNotesArray() {
+    return Array.from(this.notes.values());
+  }
 
   getMainNote: NotesGateway["getMainNote"] = async () => {
-    const notLinkedNotes = this.notes.filter((checkingNote) =>
-      !this.notes.some((potentialParentNote) =>
-        potentialParentNote.content.includes(checkingNote.id)
-      )
+    const notesAsArray = this.getNotesArray();
+    const notLinkedNotes = notesAsArray.filter(
+      (checkingNote) =>
+        !notesAsArray.some((potentialParentNote) =>
+          potentialParentNote.content.includes(checkingNote.id)
+        )
     );
     return {
       id: MAIN_ID,
@@ -30,12 +40,12 @@ export class InMemoryNotesGateway implements NotesGateway {
   getNote: NotesGateway["getNote"] = async (id) => {
     if (id === MAIN_ID) return this.getMainNote();
 
-    const note = this.notes.find((n) => n.id === id);
+    const note = this.notes.get(id);
     if (!note) {
       return null;
     }
 
-    const parentNote = this.notes.find((potentialParentNote) =>
+    const parentNote = this.getNotesArray().find((potentialParentNote) =>
       potentialParentNote.content.includes(note.id)
     );
     return {
@@ -44,7 +54,7 @@ export class InMemoryNotesGateway implements NotesGateway {
       parentId: parentNote?.id || MAIN_ID,
       content: note.content
         .map((childNoteId) => {
-          const foundNote = this.notes.find((n) => n.id === childNoteId);
+          const foundNote = this.notes.get(childNoteId);
           if (!foundNote) {
             console.error(
               `Found nonexistent note reference. ID = ${childNoteId}. ParentID = ${note.id}`
@@ -60,34 +70,46 @@ export class InMemoryNotesGateway implements NotesGateway {
     };
   };
   saveNote: NotesGateway["saveNote"] = async (noteToSave) => {
+    let currentChildNotesIds: Map<string, string>;
+
     if (noteToSave.id !== MAIN_ID) {
-      const noteToSaveIdx = this.notes.findIndex((n) => n.id === noteToSave.id);
-      if (noteToSaveIdx === -1) {
+      const noteToSaveInDb = this.notes.get(noteToSave.id);
+      if (!noteToSaveInDb) {
         throw new Error(`Not found! Note ID = ${noteToSave.id}`);
       }
-      this.notes[noteToSaveIdx] = {
-        ...this.notes[noteToSaveIdx],
+      currentChildNotesIds = new Map(
+        noteToSaveInDb.content.map((id) => [id, id])
+      );
+      this.notes.set(noteToSave.id, {
+        ...noteToSaveInDb,
         text: noteToSave.text,
         content: noteToSave.content.map((n) => n.id),
-      };
+      });
+    } else {
+      const mainNote = await this.getMainNote();
+      currentChildNotesIds = new Map(mainNote.content.map((n) => [n.id, n.id]));
     }
 
     noteToSave.content.forEach((childNote) => {
-      const existingNoteIdx = this.notes.findIndex(
-        (n) => n.id === childNote.id
-      );
-      if (existingNoteIdx === -1) {
-        this.notes.push({
+      const existingNote = this.notes.get(childNote.id);
+      if (existingNote) {
+        this.notes.set(childNote.id, {
+          ...existingNote,
+          text: childNote.text,
+        });
+      } else {
+        this.notes.set(childNote.id, {
           id: childNote.id,
           text: childNote.text,
           content: [],
         });
-      } else {
-        this.notes[existingNoteIdx] = {
-          ...this.notes[existingNoteIdx],
-          text: childNote.text,
-        };
       }
+
+      currentChildNotesIds.delete(childNote.id);
+    });
+
+    currentChildNotesIds.forEach((id) => {
+      this.notes.delete(id);
     });
   };
 }

@@ -67,12 +67,15 @@ export class NotesController {
   deleteChildNote = async (childNoteId: string) => {
     const currentNote = this.tryGetCurrentNote();
 
+    const updatedNote = {
+      ...currentNote,
+      content: currentNote.content.filter((n) => n.id !== childNoteId),
+    };
+
     this.deps.viewModel.update({
-      currentNote: {
-        ...currentNote,
-        content: currentNote.content.filter((n) => n.id !== childNoteId),
-      },
+      currentNote: updatedNote,
     });
+    await this.deps.notesGateway.saveNote(updatedNote);
   };
 
   openChildNote = async (childNoteId: string) => {

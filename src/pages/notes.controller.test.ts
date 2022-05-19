@@ -8,7 +8,6 @@ import { NotesController } from "./notes.controller";
 import { NotesViewModel } from "./notes.view-model";
 
 // TODO:
-// - delete in Gateway
 // - change parent
 // - change content ordering
 
@@ -105,8 +104,7 @@ describe("Adding new child note", () => {
     expect(viewModelInteractorMock.get()).toEqual<NotesViewModel>({
       currentNote: expected,
     });
-    const noteFromGateway = await notesGateway.getMainNote();
-    expect(noteFromGateway).toEqual(expected);
+    expect(await notesGateway.getMainNote()).toEqual(expected);
   });
 
   it("should add new note to mid-level note", async () => {
@@ -131,8 +129,7 @@ describe("Adding new child note", () => {
     expect(viewModelInteractorMock.get()).toEqual<NotesViewModel>({
       currentNote: expected,
     });
-    const noteFromGateway = await notesGateway.getNote(CHILD_NOTE.id);
-    expect(noteFromGateway).toEqual(expected);
+    expect(await notesGateway.getNote(CHILD_NOTE.id)).toEqual(expected);
   });
 });
 
@@ -172,8 +169,7 @@ describe("Saving child note's text", () => {
     expect(viewModelInteractorMock.get()).toEqual<NotesViewModel>({
       currentNote: expected,
     });
-    const noteFromGateway = await notesGateway.getMainNote();
-    expect(noteFromGateway).toEqual(expected);
+    expect(await notesGateway.getMainNote()).toEqual(expected);
   });
 });
 
@@ -182,14 +178,16 @@ it("should delete child note from main", async () => {
     currentNote: MAIN_NOTE_WITH_CHILD,
   };
 
-  const { controller, viewModelInteractorMock } =
-    createController(INITIAL_VIEW_MODEL);
+  const { controller, viewModelInteractorMock, notesGateway } =
+    createController(INITIAL_VIEW_MODEL, [DB_CHILD_NOTE]);
 
-  await controller.deleteChildNote(SHORT_CHILD_NOTE.id);
+  await controller.deleteChildNote(CHILD_NOTE.id);
 
   expect(viewModelInteractorMock.get()).toEqual<NotesViewModel>({
     currentNote: MAIN_EMPTY_NOTE,
   });
+  expect(await notesGateway.getMainNote()).toEqual(MAIN_EMPTY_NOTE);
+  expect(await notesGateway.getNote(CHILD_NOTE.id)).toBeNull();
 });
 
 describe("Opening child content", () => {
