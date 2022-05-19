@@ -6,7 +6,7 @@ import { NotesPage } from "../pages/notes-page";
 export const App: React.FC = () => (
   <>
     <CssBaseline />
-    <NotesGatewayContext.Provider value={new InMemoryNotesGateway()}>
+    <NotesGatewayContext.Provider value={new InMemoryNotesGateway([])}>
       <NotesPage />
     </NotesGatewayContext.Provider>
   </>

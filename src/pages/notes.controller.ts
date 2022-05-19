@@ -3,8 +3,8 @@ import { ViewModelInteractor } from "../shared/lib/view-model-interactor";
 import { NotesViewModel } from "./notes.view-model";
 
 export type NotesControllerDeps = {
-  notesGateway: NotesGateway;
   viewModel: ViewModelInteractor<NotesViewModel>;
+  notesGateway: NotesGateway;
 };
 
 export class NotesController {
@@ -17,69 +17,93 @@ export class NotesController {
 
   init = async () => {
     const note = await this.deps.notesGateway.getMainNote();
-    this.deps.viewModel.update({ currentNote: note });
+    this.deps.viewModel.update({
+      currentNote: note,
+    });
   };
 
-  openNote = async (id: string) => {
-    const note = await this.deps.notesGateway.getNote(id);
-    if (!note) {
-      throw new Error("TODO");
-    }
-    this.deps.viewModel.update({ currentNote: note });
+  addChildNote = async () => {
+    const currentNote = this.tryGetCurrentNote();
+
+    const newId = Date.now().toString();
+    this.deps.viewModel.update({
+      currentNote: {
+        ...currentNote,
+        content: [...currentNote.content, { id: newId, text: "" }],
+      },
+    });
   };
 
-  goUp = async () => {
-    const { currentNote } = this.deps.viewModel.get();
-    if (!currentNote) {
-      throw new Error("App wasn't initialized!");
+  saveChildNote = async (childNoteId: string, text: string) => {
+    const currentNote = this.tryGetCurrentNote();
+
+    const childNoteIdx = currentNote.content.findIndex(
+      (n) => n.id === childNoteId
+    );
+    if (childNoteIdx < 0) {
+      throw new Error(`Child note (id=${childNoteId}) wasn't found!`);
     }
+
+    const updatedNoteContent = [...currentNote.content];
+    updatedNoteContent[childNoteIdx] = {
+      ...updatedNoteContent[childNoteIdx],
+      text,
+    };
+
+    this.deps.viewModel.update({
+      currentNote: {
+        ...currentNote,
+        content: updatedNoteContent,
+      },
+    });
+  };
+
+  deleteChildNote = async (childNoteId: string) => {
+    const currentNote = this.tryGetCurrentNote();
+
+    this.deps.viewModel.update({
+      currentNote: {
+        ...currentNote,
+        content: currentNote.content.filter((n) => n.id !== childNoteId),
+      },
+    });
+  };
+
+  openChildNote = async (childNoteId: string) => {
+    const note = await this.tryGetNoteWith(childNoteId);
+
+    this.deps.viewModel.update({
+      currentNote: note,
+    });
+  };
+
+  goToUpperLevel = async () => {
+    const currentNote = this.tryGetCurrentNote();
+
     if (!currentNote.parentId) {
       throw new Error("There is no upper level notes!");
     }
-    const note = await this.deps.notesGateway.getNote(currentNote.parentId);
+
+    const note = await this.tryGetNoteWith(currentNote.parentId);
+
+    this.deps.viewModel.update({
+      currentNote: note,
+    });
+  };
+
+  private tryGetCurrentNote() {
+    const { currentNote } = this.deps.viewModel.get();
+    if (!currentNote) {
+      throw new Error("Notes weren't initialized!");
+    }
+    return currentNote;
+  }
+
+  private async tryGetNoteWith(id: string) {
+    const note = await this.deps.notesGateway.getNote(id);
     if (!note) {
-      throw new Error(`Couldn't find note with id = ${currentNote.parentId}`);
+      throw new Error(`Couldn't find note with id = ${id}`);
     }
-    await this.openNote(currentNote.parentId);
-  };
-
-  createNote = async () => {
-    const { currentNote } = this.deps.viewModel.get();
-    if (!currentNote) {
-      throw new Error("App wasn't initialized!");
-    }
-    await this.deps.notesGateway.createNewNote(currentNote.id);
-    await this.refreshCurrentNote();
-  };
-
-  saveNote = async (id: string, text: string) => {
-    const { currentNote } = this.deps.viewModel.get();
-    if (!currentNote) {
-      throw new Error("App wasn't initialized!");
-    }
-    await this.deps.notesGateway.saveNote(id, currentNote.id, text);
-    await this.refreshCurrentNote();
-  };
-
-  deleteNote = async (id: string) => {
-    await this.deps.notesGateway.deleteNote(id);
-    await this.refreshCurrentNote();
-  };
-
-  changeParent = async (id: string, newParentId: string) => {
-    await this.deps.notesGateway.saveNote(id, newParentId);
-    await this.refreshCurrentNote();
-  };
-
-  private async refreshCurrentNote() {
-    const { currentNote } = this.deps.viewModel.get();
-    if (!currentNote) {
-      throw new Error("App wasn't initialized!");
-    }
-    const refreshedNote = await this.deps.notesGateway.getNote(currentNote.id);
-    if (!refreshedNote) {
-      throw new Error("TODO");
-    }
-    this.deps.viewModel.update({ currentNote: refreshedNote });
+    return note;
   }
 }

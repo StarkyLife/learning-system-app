@@ -40,7 +40,7 @@ export const NotesPage: React.FC = () => {
   return (
     <Container maxWidth="md">
       {viewModel.currentNote.parentId && (
-        <Button variant="text" onClick={controller.goUp}>
+        <Button variant="text" onClick={controller.goToUpperLevel}>
           Back
         </Button>
       )}
@@ -51,17 +51,19 @@ export const NotesPage: React.FC = () => {
             key={note.id}
             id={note.id}
             text={note.text}
-            onSave={controller.saveNote}
-            onDelete={controller.deleteNote}
-            onOpen={controller.openNote}
-            onChangeParent={controller.changeParent}
+            onSave={controller.saveChildNote}
+            onDelete={controller.deleteChildNote}
+            onOpen={controller.openChildNote}
+            onChangeParent={() => {
+              throw new Error("Not implemented");
+            }}
           />
         ))}
         <div>
           <IconButton
             color="primary"
             size="large"
-            onClick={controller.createNote}
+            onClick={controller.addChildNote}
           >
             <AddIcon fontSize="inherit" />
           </IconButton>
