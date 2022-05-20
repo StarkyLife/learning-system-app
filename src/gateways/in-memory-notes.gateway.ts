@@ -16,7 +16,7 @@ export class InMemoryNotesGateway implements NotesGateway {
     this.notes = new Map(dbNotes.map((n) => [n.id, n]));
   }
 
-  private getNotesArray() {
+  getNotesArray() {
     return Array.from(this.notes.values());
   }
 
