@@ -1,11 +1,11 @@
 import {
   InMemoryDbNote,
   InMemoryNotesGateway,
-} from "../gateways/in-memory-notes.gateway";
-import { createViewModelInteractorMock } from "../shared/lib/view-model-interactor-mock";
-import { NotesController } from "./notes.controller";
-import { NotesViewModel } from "./notes.view-model";
-import { TestNote } from "./test/test-note";
+} from "../../gateways/in-memory-notes.gateway";
+import { createViewModelInteractorMock } from "../../shared/lib/view-model-interactor-mock";
+import { NotesController } from "../notes.controller";
+import { NotesViewModel } from "../notes.view-model";
+import { TestNote } from "./test-note";
 
 // TODO:
 // - deleting note with multiple level child notes
