@@ -54,9 +54,7 @@ export const NotesPage: React.FC = () => {
             onSave={controller.saveChildNote}
             onDelete={controller.deleteChildNote}
             onOpen={controller.openChildNote}
-            onChangeParent={() => {
-              throw new Error("Not implemented");
-            }}
+            onChangeParent={controller.changeNoteParent}
           />
         ))}
         <div>

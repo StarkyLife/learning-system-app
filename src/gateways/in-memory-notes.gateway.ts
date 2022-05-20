@@ -20,21 +20,43 @@ export class InMemoryNotesGateway implements NotesGateway {
     return Array.from(this.notes.values());
   }
 
-  getMainNote: NotesGateway["getMainNote"] = async () => {
-    const notesAsArray = this.getNotesArray();
-    const notLinkedNotes = notesAsArray.filter(
-      (checkingNote) =>
-        !notesAsArray.some((potentialParentNote) =>
-          potentialParentNote.content.includes(checkingNote.id)
-        )
-    );
-    return {
+  private getOrCreateMain() {
+    const note = this.notes.get(MAIN_ID);
+    if (note) {
+      return note;
+    }
+
+    const newMain: InMemoryDbNote = {
       id: MAIN_ID,
       text: "Main",
-      content: notLinkedNotes.map((n) => ({
-        id: n.id,
-        text: n.text,
-      })),
+      content: [],
+    };
+    this.notes.set(newMain.id, newMain);
+    return newMain;
+  }
+
+  private createShortNote = (parentId: string) => (id: string) => {
+    const foundNote = this.notes.get(id);
+    if (!foundNote) {
+      console.error(
+        `Found nonexistent note reference. ID = ${id}. ParentID = ${parentId}`
+      );
+      return null;
+    }
+    return {
+      id: foundNote.id,
+      text: foundNote.text,
+    };
+  };
+
+  getMainNote: NotesGateway["getMainNote"] = async () => {
+    const note = this.getOrCreateMain();
+    return {
+      id: note.id,
+      text: note.text,
+      content: note.content
+        .map(this.createShortNote(note.id))
+        .filter((n: ShortNote | null): n is ShortNote => Boolean(n)),
     };
   };
   getNote: NotesGateway["getNote"] = async (id) => {
@@ -53,44 +75,27 @@ export class InMemoryNotesGateway implements NotesGateway {
       text: note.text,
       parentId: parentNote?.id || MAIN_ID,
       content: note.content
-        .map((childNoteId) => {
-          const foundNote = this.notes.get(childNoteId);
-          if (!foundNote) {
-            console.error(
-              `Found nonexistent note reference. ID = ${childNoteId}. ParentID = ${note.id}`
-            );
-            return null;
-          }
-          return {
-            id: foundNote.id,
-            text: foundNote.text,
-          };
-        })
+        .map(this.createShortNote(note.id))
         .filter((n: ShortNote | null): n is ShortNote => Boolean(n)),
     };
   };
-  saveNote: NotesGateway["saveNote"] = async (noteToSave) => {
+  saveNote: NotesGateway["saveNote"] = async (updatedNote) => {
     let currentChildNotesIds: Map<string, string>;
 
-    if (noteToSave.id !== MAIN_ID) {
-      const noteToSaveInDb = this.notes.get(noteToSave.id);
-      if (!noteToSaveInDb) {
-        throw new Error(`Not found! Note ID = ${noteToSave.id}`);
-      }
-      currentChildNotesIds = new Map(
-        noteToSaveInDb.content.map((id) => [id, id])
-      );
-      this.notes.set(noteToSave.id, {
-        ...noteToSaveInDb,
-        text: noteToSave.text,
-        content: noteToSave.content.map((n) => n.id),
-      });
-    } else {
-      const mainNote = await this.getMainNote();
-      currentChildNotesIds = new Map(mainNote.content.map((n) => [n.id, n.id]));
+    const noteToSaveInDb = this.notes.get(updatedNote.id);
+    if (!noteToSaveInDb) {
+      throw new Error(`Not found! Note ID = ${updatedNote.id}`);
     }
+    currentChildNotesIds = new Map(
+      noteToSaveInDb.content.map((id) => [id, id])
+    );
+    this.notes.set(updatedNote.id, {
+      ...noteToSaveInDb,
+      text: updatedNote.text,
+      content: updatedNote.content.map((n) => n.id),
+    });
 
-    noteToSave.content.forEach((childNote) => {
+    updatedNote.content.forEach((childNote) => {
       const existingNote = this.notes.get(childNote.id);
       if (existingNote) {
         this.notes.set(childNote.id, {
@@ -110,6 +115,30 @@ export class InMemoryNotesGateway implements NotesGateway {
 
     currentChildNotesIds.forEach((id) => {
       this.notes.delete(id);
+    });
+  };
+
+  moveNote: NotesGateway["moveNote"] = async ({
+    id,
+    oldParentId,
+    newParentId,
+  }) => {
+    const oldParent = this.notes.get(oldParentId);
+    if (!oldParent) {
+      throw new Error(`Not found! Note ID = ${oldParentId}`);
+    }
+    const newParent = this.notes.get(newParentId);
+    if (!newParent) {
+      throw new Error(`Not found! Note ID = ${newParentId}`);
+    }
+
+    this.notes.set(oldParent.id, {
+      ...oldParent,
+      content: oldParent.content.filter((i) => i !== id),
+    });
+    this.notes.set(newParent.id, {
+      ...newParent,
+      content: newParent.content.concat(id),
     });
   };
 }

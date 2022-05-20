@@ -100,6 +100,21 @@ export class NotesController {
     });
   };
 
+  changeNoteParent = async (id: string, newParentId: string) => {
+    const currentNote = this.tryGetCurrentNote();
+    this.deps.viewModel.update({
+      currentNote: {
+        ...currentNote,
+        content: currentNote.content.filter((n) => n.id !== id),
+      },
+    });
+    await this.deps.notesGateway.moveNote({
+      id,
+      newParentId,
+      oldParentId: currentNote.id,
+    });
+  };
+
   private tryGetCurrentNote() {
     const { currentNote } = this.deps.viewModel.get();
     if (!currentNote) {

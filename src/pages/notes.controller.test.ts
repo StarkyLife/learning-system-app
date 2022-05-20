@@ -1,4 +1,3 @@
-import { NoteView, ShortNote } from "../entities/notes";
 import {
   InMemoryDbNote,
   InMemoryNotesGateway,
@@ -6,9 +5,10 @@ import {
 import { createViewModelInteractorMock } from "../shared/lib/view-model-interactor-mock";
 import { NotesController } from "./notes.controller";
 import { NotesViewModel } from "./notes.view-model";
+import { TestNote } from "./test/test-note";
 
 // TODO:
-// - change parent
+// - deleting note with multiple level child notes
 // - change content ordering
 
 const createController = (
@@ -28,29 +28,15 @@ const createController = (
   return { controller, viewModelInteractorMock, notesGateway };
 };
 
-const MAIN_EMPTY_NOTE: NoteView = {
+const MAIN_NOTE = new TestNote({
   id: "main",
   text: "Main",
-  content: [],
-};
-const SHORT_CHILD_NOTE: ShortNote = {
+});
+const CHILD_NOTE = new TestNote({
   id: "child-id",
   text: "",
-};
-const MAIN_NOTE_WITH_CHILD: NoteView = {
-  ...MAIN_EMPTY_NOTE,
-  content: [SHORT_CHILD_NOTE],
-};
-const CHILD_NOTE: NoteView = {
-  ...SHORT_CHILD_NOTE,
-  parentId: MAIN_EMPTY_NOTE.id,
-  content: [],
-};
-const DB_CHILD_NOTE: InMemoryDbNote = {
-  id: CHILD_NOTE.id,
-  text: CHILD_NOTE.text,
-  content: [],
-};
+  parentId: MAIN_NOTE.data.id,
+});
 
 const APP_NOT_INITIALIZED_ERROR = new Error("Notes weren't initialized!");
 
@@ -65,7 +51,7 @@ it("should init view model with main note", async () => {
   await controller.init();
 
   expect(viewModelInteractorMock.get()).toEqual<NotesViewModel>({
-    currentNote: MAIN_EMPTY_NOTE,
+    currentNote: MAIN_NOTE.getNoteView(),
   });
 });
 
@@ -84,62 +70,36 @@ describe("Adding new child note", () => {
 
   it("should add new note to main", async () => {
     const INITIAL_VIEW_MODEL: NotesViewModel = {
-      currentNote: MAIN_EMPTY_NOTE,
+      currentNote: MAIN_NOTE.getNoteView(),
     };
 
     const { controller, viewModelInteractorMock, notesGateway } =
-      createController(INITIAL_VIEW_MODEL);
+      createController(INITIAL_VIEW_MODEL, [MAIN_NOTE.getDbNote()]);
 
     await controller.addChildNote();
 
-    const expected = {
-      ...MAIN_EMPTY_NOTE,
-      content: [
-        {
-          id: expect.any(String),
-          text: "",
-        },
-      ],
-    };
+    const expected = MAIN_NOTE.getNoteView([
+      {
+        id: expect.any(String),
+        text: "",
+      },
+    ]);
     expect(viewModelInteractorMock.get()).toEqual<NotesViewModel>({
       currentNote: expected,
     });
     expect(await notesGateway.getMainNote()).toEqual(expected);
-  });
-
-  it("should add new note to mid-level note", async () => {
-    const INITIAL_VIEW_MODEL: NotesViewModel = {
-      currentNote: CHILD_NOTE,
-    };
-
-    const { controller, viewModelInteractorMock, notesGateway } =
-      createController(INITIAL_VIEW_MODEL, [DB_CHILD_NOTE]);
-
-    await controller.addChildNote();
-
-    const expected = {
-      ...CHILD_NOTE,
-      content: [
-        {
-          id: expect.any(String),
-          text: "",
-        },
-      ],
-    };
-    expect(viewModelInteractorMock.get()).toEqual<NotesViewModel>({
-      currentNote: expected,
-    });
-    expect(await notesGateway.getNote(CHILD_NOTE.id)).toEqual(expected);
   });
 });
 
 describe("Saving child note's text", () => {
   it("should throw an error if child note was not found", async () => {
     const INITIAL_VIEW_MODEL: NotesViewModel = {
-      currentNote: MAIN_EMPTY_NOTE,
+      currentNote: MAIN_NOTE.getNoteView(),
     };
 
-    const { controller } = createController(INITIAL_VIEW_MODEL);
+    const { controller } = createController(INITIAL_VIEW_MODEL, [
+      MAIN_NOTE.getDbNote(),
+    ]);
 
     await expect(controller.saveChildNote("child-id", "text")).rejects.toEqual(
       new Error("Child note (id=child-id) wasn't found!")
@@ -149,23 +109,23 @@ describe("Saving child note's text", () => {
   it("should save child text", async () => {
     const TEXT_TO_SAVE = "child note text to save";
     const INITIAL_VIEW_MODEL: NotesViewModel = {
-      currentNote: MAIN_NOTE_WITH_CHILD,
+      currentNote: MAIN_NOTE.getNoteView([CHILD_NOTE.getShortNote()]),
     };
 
     const { controller, viewModelInteractorMock, notesGateway } =
-      createController(INITIAL_VIEW_MODEL, [DB_CHILD_NOTE]);
+      createController(INITIAL_VIEW_MODEL, [
+        MAIN_NOTE.getDbNote([CHILD_NOTE.data.id]),
+        CHILD_NOTE.getDbNote(),
+      ]);
 
-    await controller.saveChildNote(SHORT_CHILD_NOTE.id, TEXT_TO_SAVE);
+    await controller.saveChildNote(CHILD_NOTE.data.id, TEXT_TO_SAVE);
 
-    const expected = {
-      ...MAIN_EMPTY_NOTE,
-      content: [
-        {
-          ...SHORT_CHILD_NOTE,
-          text: TEXT_TO_SAVE,
-        },
-      ],
-    };
+    const expected = MAIN_NOTE.getNoteView([
+      {
+        ...CHILD_NOTE.getShortNote(),
+        text: TEXT_TO_SAVE,
+      },
+    ]);
     expect(viewModelInteractorMock.get()).toEqual<NotesViewModel>({
       currentNote: expected,
     });
@@ -175,48 +135,53 @@ describe("Saving child note's text", () => {
 
 it("should delete child note from main", async () => {
   const INITIAL_VIEW_MODEL: NotesViewModel = {
-    currentNote: MAIN_NOTE_WITH_CHILD,
+    currentNote: MAIN_NOTE.getNoteView([CHILD_NOTE.getShortNote()]),
   };
 
   const { controller, viewModelInteractorMock, notesGateway } =
-    createController(INITIAL_VIEW_MODEL, [DB_CHILD_NOTE]);
+    createController(INITIAL_VIEW_MODEL, [
+      MAIN_NOTE.getDbNote([CHILD_NOTE.data.id]),
+      CHILD_NOTE.getDbNote(),
+    ]);
 
-  await controller.deleteChildNote(CHILD_NOTE.id);
+  await controller.deleteChildNote(CHILD_NOTE.data.id);
 
   expect(viewModelInteractorMock.get()).toEqual<NotesViewModel>({
-    currentNote: MAIN_EMPTY_NOTE,
+    currentNote: MAIN_NOTE.getNoteView(),
   });
-  expect(await notesGateway.getMainNote()).toEqual(MAIN_EMPTY_NOTE);
-  expect(await notesGateway.getNote(CHILD_NOTE.id)).toBeNull();
+  expect(await notesGateway.getMainNote()).toEqual(MAIN_NOTE.getNoteView());
+  expect(await notesGateway.getNote(CHILD_NOTE.data.id)).toBeNull();
 });
 
 describe("Opening child content", () => {
   it("should throw an error if it can't find note with given id", async () => {
     const INITIAL_VIEW_MODEL: NotesViewModel = {
-      currentNote: MAIN_EMPTY_NOTE,
+      currentNote: MAIN_NOTE.getNoteView(),
     };
 
-    const { controller } = createController(INITIAL_VIEW_MODEL);
+    const { controller } = createController(INITIAL_VIEW_MODEL, [
+      MAIN_NOTE.getDbNote(),
+    ]);
 
-    await expect(controller.openChildNote(CHILD_NOTE.id)).rejects.toEqual(
-      new Error(`Couldn't find note with id = ${CHILD_NOTE.id}`)
+    await expect(controller.openChildNote(CHILD_NOTE.data.id)).rejects.toEqual(
+      new Error(`Couldn't find note with id = ${CHILD_NOTE.data.id}`)
     );
   });
 
   it("should open child note content", async () => {
     const INITIAL_VIEW_MODEL: NotesViewModel = {
-      currentNote: MAIN_NOTE_WITH_CHILD,
+      currentNote: MAIN_NOTE.getNoteView([CHILD_NOTE.getShortNote()]),
     };
 
     const { controller, viewModelInteractorMock } = createController(
       INITIAL_VIEW_MODEL,
-      [DB_CHILD_NOTE]
+      [MAIN_NOTE.getDbNote([CHILD_NOTE.data.id]), CHILD_NOTE.getDbNote()]
     );
 
-    await controller.openChildNote(CHILD_NOTE.id);
+    await controller.openChildNote(CHILD_NOTE.data.id);
 
     expect(viewModelInteractorMock.get()).toEqual<NotesViewModel>({
-      currentNote: CHILD_NOTE,
+      currentNote: CHILD_NOTE.getNoteView(),
     });
   });
 });
@@ -224,48 +189,97 @@ describe("Opening child content", () => {
 describe("Going back to upper levels", () => {
   it("should throw an error if the current note is the main one", async () => {
     const INITIAL_VIEW_MODEL: NotesViewModel = {
-      currentNote: MAIN_EMPTY_NOTE,
+      currentNote: MAIN_NOTE.getNoteView(),
     };
 
-    const { controller } = createController(INITIAL_VIEW_MODEL);
+    const { controller } = createController(INITIAL_VIEW_MODEL, [
+      MAIN_NOTE.getDbNote(),
+    ]);
 
     await expect(controller.goToUpperLevel()).rejects.toEqual(
       new Error("There is no upper level notes!")
     );
   });
 
-  it("should throw an error if it can't find note with given id", async () => {
-    const THIRD_LEVEL_NOTE: NoteView = {
+  it("should throw an error if it can't find a note with the given id", async () => {
+    const THIRD_LEVEL_NOTE = new TestNote({
       id: "third-level-child-id",
       text: "",
-      parentId: CHILD_NOTE.id,
-      content: [],
-    };
+      parentId: CHILD_NOTE.data.id,
+    });
     const INITIAL_VIEW_MODEL: NotesViewModel = {
-      currentNote: THIRD_LEVEL_NOTE,
+      currentNote: THIRD_LEVEL_NOTE.getNoteView(),
     };
 
-    const { controller } = createController(INITIAL_VIEW_MODEL);
+    const { controller } = createController(INITIAL_VIEW_MODEL, [
+      MAIN_NOTE.getDbNote(),
+      THIRD_LEVEL_NOTE.getDbNote(),
+    ]);
 
     await expect(controller.goToUpperLevel()).rejects.toEqual(
-      new Error(`Couldn't find note with id = ${THIRD_LEVEL_NOTE.parentId}`)
+      new Error(
+        `Couldn't find note with id = ${THIRD_LEVEL_NOTE.data.parentId}`
+      )
     );
   });
 
   it("should open parent note", async () => {
     const INITIAL_VIEW_MODEL: NotesViewModel = {
-      currentNote: CHILD_NOTE,
+      currentNote: CHILD_NOTE.getNoteView(),
     };
 
     const { controller, viewModelInteractorMock } = createController(
       INITIAL_VIEW_MODEL,
-      [DB_CHILD_NOTE]
+      [MAIN_NOTE.getDbNote([CHILD_NOTE.data.id]), CHILD_NOTE.getDbNote()]
     );
 
     await controller.goToUpperLevel();
 
     expect(viewModelInteractorMock.get()).toEqual<NotesViewModel>({
-      currentNote: MAIN_NOTE_WITH_CHILD,
+      currentNote: MAIN_NOTE.getNoteView([CHILD_NOTE.getShortNote()]),
     });
+  });
+});
+
+describe("Change note's parent", () => {
+  it("change parent inside main note", async () => {
+    const NOTE_TO_MOVE = new TestNote({
+      id: "note-to-move-id",
+      text: "note to move text",
+      parentId: MAIN_NOTE.data.id,
+    });
+    const NEW_PARENT_NOTE = new TestNote({
+      id: "new-parent",
+      text: "new parent text",
+      parentId: MAIN_NOTE.data.id,
+    });
+
+    const INITIAL_VIEW_MODEL: NotesViewModel = {
+      currentNote: MAIN_NOTE.getNoteView([
+        NEW_PARENT_NOTE.getShortNote(),
+        NOTE_TO_MOVE.getShortNote(),
+      ]),
+    };
+
+    const { controller, viewModelInteractorMock, notesGateway } =
+      createController(INITIAL_VIEW_MODEL, [
+        MAIN_NOTE.getDbNote([NEW_PARENT_NOTE.data.id, NOTE_TO_MOVE.data.id]),
+        NEW_PARENT_NOTE.getDbNote(),
+        NOTE_TO_MOVE.getDbNote(),
+      ]);
+
+    await controller.changeNoteParent(
+      NOTE_TO_MOVE.data.id,
+      NEW_PARENT_NOTE.data.id
+    );
+
+    const expected = MAIN_NOTE.getNoteView([NEW_PARENT_NOTE.getShortNote()]);
+    expect(viewModelInteractorMock.get()).toEqual<NotesViewModel>({
+      currentNote: expected,
+    });
+    expect(await notesGateway.getMainNote()).toEqual(expected);
+    expect(await notesGateway.getNote(NEW_PARENT_NOTE.data.id)).toEqual(
+      NEW_PARENT_NOTE.getNoteView([NOTE_TO_MOVE.getShortNote()])
+    );
   });
 });
