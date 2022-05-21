@@ -7,9 +7,6 @@ import { NotesController } from "../notes.controller";
 import { NotesViewModel } from "../notes.view-model";
 import { TestNote } from "./test-note";
 
-// TODO:
-// - change content ordering
-
 const createController = (
   initialViewModel: NotesViewModel,
   initialGatewayNotes: InMemoryDbNote[] = []
@@ -37,8 +34,6 @@ const CHILD_NOTE = new TestNote({
   parentId: MAIN_NOTE.data.id,
 });
 
-const APP_NOT_INITIALIZED_ERROR = new Error("Notes weren't initialized!");
-
 it("should init view model with main note", async () => {
   const INITIAL_VIEW_MODEL: NotesViewModel = {
     currentNote: null,
@@ -56,6 +51,7 @@ it("should init view model with main note", async () => {
 
 describe("Adding new child note", () => {
   it("should throw an error if current note is not initialized", async () => {
+    const APP_NOT_INITIALIZED_ERROR = new Error("Notes weren't initialized!");
     const INITIAL_VIEW_MODEL: NotesViewModel = {
       currentNote: null,
     };
@@ -297,5 +293,65 @@ describe("Change note's parent", () => {
     expect(await notesGateway.getNote(NEW_PARENT_NOTE.data.id)).toEqual(
       NEW_PARENT_NOTE.getNoteView([NOTE_TO_MOVE.getShortNote()])
     );
+  });
+});
+
+describe("Notes ordering", () => {
+  it("should throw an error if passed nonexistent noteId", async () => {
+    const NEW_POSITION_INDEX = 0;
+    const INITIAL_VIEW_MODEL: NotesViewModel = {
+      currentNote: MAIN_NOTE.getNoteView(),
+    };
+
+    const { controller } = createController(INITIAL_VIEW_MODEL, [
+      MAIN_NOTE.getDbNote(),
+    ]);
+
+    await expect(
+      controller.moveNoteTo("some-random-id", NEW_POSITION_INDEX)
+    ).rejects.toEqual(
+      new Error(
+        `Can't move child note with ID = some-random-id. Reason: it doesn't exist in current parent note.`
+      )
+    );
+  });
+
+  it("should move note to the new position", async () => {
+    const FIRST = new TestNote({
+      id: "first",
+      text: "first",
+      parentId: MAIN_NOTE.data.id,
+    });
+    const SECOND = new TestNote({
+      id: "second",
+      text: "second",
+      parentId: MAIN_NOTE.data.id,
+    });
+
+    const NEW_POSITION_INDEX = 0;
+    const INITIAL_VIEW_MODEL: NotesViewModel = {
+      currentNote: MAIN_NOTE.getNoteView([
+        FIRST.getShortNote(),
+        SECOND.getShortNote(),
+      ]),
+    };
+
+    const { controller, viewModelInteractorMock, notesGateway } =
+      createController(INITIAL_VIEW_MODEL, [
+        MAIN_NOTE.getDbNote([FIRST.data.id, SECOND.data.id]),
+        FIRST.getDbNote(),
+        SECOND.getDbNote(),
+      ]);
+
+    await controller.moveNoteTo(SECOND.data.id, NEW_POSITION_INDEX);
+
+    const expected = MAIN_NOTE.getNoteView([
+      SECOND.getShortNote(),
+      FIRST.getShortNote(),
+    ]);
+    expect(viewModelInteractorMock.get()).toEqual<NotesViewModel>({
+      currentNote: expected,
+    });
+    expect(await notesGateway.getMainNote()).toEqual(expected);
   });
 });

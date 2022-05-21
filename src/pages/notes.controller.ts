@@ -115,6 +115,30 @@ export class NotesController {
     });
   };
 
+  moveNoteTo = async (noteId: string, newPositionIndex: number) => {
+    const currentNote = this.tryGetCurrentNote();
+
+    const noteToMoveIdx = currentNote.content.findIndex((n) => n.id === noteId);
+    if (noteToMoveIdx === -1) {
+      throw new Error(
+        `Can't move child note with ID = ${noteId}. Reason: it doesn't exist in current parent note.`
+      );
+    }
+
+    const updatedNoteContent = [...currentNote.content];
+    updatedNoteContent.splice(noteToMoveIdx, 1);
+    updatedNoteContent.splice(newPositionIndex, 0, currentNote.content[noteToMoveIdx]);
+    const updatedNote: NoteView = {
+      ...currentNote,
+      content: updatedNoteContent,
+    };
+
+    this.deps.viewModel.update({
+      currentNote: updatedNote,
+    });
+    await this.deps.notesGateway.saveNote(updatedNote);
+  };
+
   private tryGetCurrentNote() {
     const { currentNote } = this.deps.viewModel.get();
     if (!currentNote) {
