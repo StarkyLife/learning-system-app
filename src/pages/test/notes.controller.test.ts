@@ -8,7 +8,6 @@ import { NotesViewModel } from "../notes.view-model";
 import { TestNote } from "./test-note";
 
 // TODO:
-// - deleting note with multiple level child notes
 // - change content ordering
 
 const createController = (
@@ -133,24 +132,41 @@ describe("Saving child note's text", () => {
   });
 });
 
-it("should delete child note from main", async () => {
-  const INITIAL_VIEW_MODEL: NotesViewModel = {
-    currentNote: MAIN_NOTE.getNoteView([CHILD_NOTE.getShortNote()]),
-  };
+describe("Deleting child note", () => {
+  it("should delete child note and all it's content", async () => {
+    const THIRD_LEVEL_NOTE = new TestNote({
+      id: "third-level",
+      text: "third level",
+      parentId: CHILD_NOTE.data.id,
+    });
+    const FOURTH_LEVEL_NOTE = new TestNote({
+      id: "fourth-level",
+      text: "fourth level",
+      parentId: THIRD_LEVEL_NOTE.data.id,
+    });
 
-  const { controller, viewModelInteractorMock, notesGateway } =
-    createController(INITIAL_VIEW_MODEL, [
-      MAIN_NOTE.getDbNote([CHILD_NOTE.data.id]),
-      CHILD_NOTE.getDbNote(),
-    ]);
+    const INITIAL_VIEW_MODEL: NotesViewModel = {
+      currentNote: MAIN_NOTE.getNoteView([CHILD_NOTE.getShortNote()]),
+    };
 
-  await controller.deleteChildNote(CHILD_NOTE.data.id);
+    const { controller, viewModelInteractorMock, notesGateway } =
+      createController(INITIAL_VIEW_MODEL, [
+        MAIN_NOTE.getDbNote([CHILD_NOTE.data.id]),
+        CHILD_NOTE.getDbNote([THIRD_LEVEL_NOTE.data.id]),
+        THIRD_LEVEL_NOTE.getDbNote([FOURTH_LEVEL_NOTE.data.id]),
+        FOURTH_LEVEL_NOTE.getDbNote(),
+      ]);
 
-  expect(viewModelInteractorMock.get()).toEqual<NotesViewModel>({
-    currentNote: MAIN_NOTE.getNoteView(),
+    await controller.deleteChildNote(CHILD_NOTE.data.id);
+
+    expect(viewModelInteractorMock.get()).toEqual<NotesViewModel>({
+      currentNote: MAIN_NOTE.getNoteView(),
+    });
+    expect(await notesGateway.getMainNote()).toEqual(MAIN_NOTE.getNoteView());
+    expect(await notesGateway.getNote(CHILD_NOTE.data.id)).toBeNull();
+    expect(await notesGateway.getNote(THIRD_LEVEL_NOTE.data.id)).toBeNull();
+    expect(await notesGateway.getNote(FOURTH_LEVEL_NOTE.data.id)).toBeNull();
   });
-  expect(await notesGateway.getMainNote()).toEqual(MAIN_NOTE.getNoteView());
-  expect(await notesGateway.getNote(CHILD_NOTE.data.id)).toBeNull();
 });
 
 describe("Opening child content", () => {

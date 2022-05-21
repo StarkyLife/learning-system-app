@@ -66,9 +66,7 @@ export class InMemoryNotesGateway implements NotesGateway {
       childNotesIdsForDelete.delete(childNote.id);
     });
 
-    childNotesIdsForDelete.forEach((id) => {
-      this.notes.delete(id);
-    });
+    childNotesIdsForDelete.forEach(this.cascadeDelete);
   };
 
   moveNote: NotesGateway["moveNote"] = async ({
@@ -112,7 +110,7 @@ export class InMemoryNotesGateway implements NotesGateway {
     const foundNote = this.notes.get(id);
     if (!foundNote) {
       console.error(
-        `Found nonexistent note reference. ID = ${id}. ParentID = ${parentId}`
+        `Found reference to nonexistent note. ID = ${id}. ParentID = ${parentId}`
       );
       return null;
     }
@@ -147,5 +145,17 @@ export class InMemoryNotesGateway implements NotesGateway {
         content: [],
       });
     }
+  };
+
+  private cascadeDelete = (noteId: string) => {
+    const note = this.notes.get(noteId);
+    if (!note) {
+      console.warn(
+        `Deleting. Couldn\'t find note with ID = ${noteId}. Skipping...`
+      );
+      return;
+    }
+    note.content.forEach(this.cascadeDelete);
+    this.notes.delete(note.id);
   };
 }
