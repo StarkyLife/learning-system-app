@@ -1,5 +1,5 @@
-import { NoteView, ShortNote } from "../../entities/notes";
-import { InMemoryDbNote } from "../../gateways/in-memory-notes.gateway";
+import { NoteView, ShortNote } from "../../../entities/notes";
+import { InMemoryDbNote } from "../../../gateways/in-memory-notes.gateway";
 
 export class TestNote {
   constructor(public data: { id: string; text: string; parentId?: string }) {}

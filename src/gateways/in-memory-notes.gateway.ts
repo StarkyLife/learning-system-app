@@ -151,7 +151,7 @@ export class InMemoryNotesGateway implements NotesGateway {
     const note = this.notes.get(noteId);
     if (!note) {
       console.warn(
-        `Deleting. Couldn\'t find note with ID = ${noteId}. Skipping...`
+        `Deleting. Couldn't find note with ID = ${noteId}. Skipping...`
       );
       return;
     }

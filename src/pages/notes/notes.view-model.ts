@@ -1,4 +1,4 @@
-import { NoteView } from "../entities/notes";
+import { NoteView } from "../../entities/notes";
 
 export type NotesViewModel = {
   currentNote: NoteView | null;

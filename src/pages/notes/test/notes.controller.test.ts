@@ -1,11 +1,13 @@
 import {
   InMemoryDbNote,
   InMemoryNotesGateway,
-} from "../../gateways/in-memory-notes.gateway";
-import { createViewModelInteractorMock } from "../../shared/lib/view-model-interactor-mock";
+} from "../../../gateways/in-memory-notes.gateway";
+import { createViewModelInteractorMock } from "../../../shared/lib/view-model-interactor-mock";
 import { NotesController } from "../notes.controller";
 import { NotesViewModel } from "../notes.view-model";
 import { TestNote } from "./test-note";
+
+// TODO: virtual move without saving ( save on drop only )
 
 const createController = (
   initialViewModel: NotesViewModel,

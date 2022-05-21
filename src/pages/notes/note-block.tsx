@@ -8,7 +8,7 @@ import {
   useMemo,
   useState,
 } from "react";
-import { throttle } from "../shared/lib/throttle";
+import { throttle } from "../../shared/lib/throttle";
 
 const DRAG_TRANSFER_DATA_KEY = "noteId";
 
