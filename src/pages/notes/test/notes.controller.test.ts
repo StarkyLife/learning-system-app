@@ -7,8 +7,6 @@ import { NotesController } from "../notes.controller";
 import { NotesViewModel } from "../notes.view-model";
 import { TestNote } from "./test-note";
 
-// TODO: virtual move without saving ( save on drop only )
-
 const createController = (
   initialViewModel: NotesViewModel,
   initialGatewayNotes: InMemoryDbNote[] = []
@@ -300,7 +298,6 @@ describe("Change note's parent", () => {
 
 describe("Notes ordering", () => {
   it("should throw an error if passed nonexistent noteId", async () => {
-    const NEW_POSITION_INDEX = 0;
     const INITIAL_VIEW_MODEL: NotesViewModel = {
       currentNote: MAIN_NOTE.getNoteView(),
     };
@@ -310,7 +307,11 @@ describe("Notes ordering", () => {
     ]);
 
     await expect(
-      controller.moveNoteTo("some-random-id", NEW_POSITION_INDEX)
+      controller.changeNotePosition(
+        "some-random-id",
+        "some-random-related-id",
+        "up"
+      )
     ).rejects.toEqual(
       new Error(
         `Can't move child note with ID = some-random-id. Reason: it doesn't exist in current parent note.`
@@ -318,39 +319,75 @@ describe("Notes ordering", () => {
     );
   });
 
-  it("should move note to the new position", async () => {
-    const FIRST = new TestNote({
-      id: "first",
-      text: "first",
-      parentId: MAIN_NOTE.data.id,
-    });
-    const SECOND = new TestNote({
-      id: "second",
-      text: "second",
-      parentId: MAIN_NOTE.data.id,
-    });
-
-    const NEW_POSITION_INDEX = 0;
+  it("should throw an error if passed nonexistent related note id", async () => {
     const INITIAL_VIEW_MODEL: NotesViewModel = {
-      currentNote: MAIN_NOTE.getNoteView([
-        FIRST.getShortNote(),
-        SECOND.getShortNote(),
-      ]),
+      currentNote: MAIN_NOTE.getNoteView([CHILD_NOTE.getShortNote()]),
+    };
+
+    const { controller } = createController(INITIAL_VIEW_MODEL, [
+      MAIN_NOTE.getDbNote([CHILD_NOTE.data.id]),
+      CHILD_NOTE.getDbNote(),
+    ]);
+
+    await expect(
+      controller.changeNotePosition(
+        CHILD_NOTE.data.id,
+        "some-random-related-id",
+        "up"
+      )
+    ).rejects.toEqual(
+      new Error(
+        `Can't move child note with ID = ${CHILD_NOTE.data.id}. Reason: can't find related note with ID = some-random-related-id.`
+      )
+    );
+  });
+
+  // prettier-ignore
+  it.each`
+  position    | initial                       | movingNote  | relatedNote | result
+  ${'up'}     | ${["1", "2", "3", "4", "5"]}  | ${'1'}      | ${'5'}      | ${["2", "3", "4", '1', '5']}
+  ${'up'}     | ${["1", "2", "3", "4", "5"]}  | ${'5'}      | ${'1'}      | ${['5', '1', "2", "3", "4"]}
+  ${'down'}   | ${["1", "2", "3", "4", "5"]}  | ${'1'}      | ${'5'}      | ${["2", "3", "4", '5', '1']}
+  ${'down'}   | ${["1", "2", "3", "4", "5"]}  | ${'5'}      | ${'1'}      | ${['1', '5', "2", "3", "4"]}
+  `("should move note $movingNote to the $position position related to $relatedNote", async ({
+      position,
+      initial,
+      movingNote,
+      relatedNote,
+      result
+  }: {
+      position: 'up' | 'down';
+      initial: string[];
+      movingNote: string;
+      relatedNote: string;
+      result: string[]
+  }) => {
+    const createTestNote = (id: string) =>
+      new TestNote({
+        id,
+        text: id,
+        parentId: MAIN_NOTE.data.id,
+      });
+
+    const initialNotes = initial.map(createTestNote);
+
+    const INITIAL_VIEW_MODEL: NotesViewModel = {
+      currentNote: MAIN_NOTE.getNoteView(
+        initialNotes.map((n) => n.getShortNote())
+      ),
     };
 
     const { controller, viewModelInteractorMock, notesGateway } =
       createController(INITIAL_VIEW_MODEL, [
-        MAIN_NOTE.getDbNote([FIRST.data.id, SECOND.data.id]),
-        FIRST.getDbNote(),
-        SECOND.getDbNote(),
+        MAIN_NOTE.getDbNote(initialNotes.map((n) => n.data.id)),
+        ...initialNotes.map((n) => n.getDbNote()),
       ]);
 
-    await controller.moveNoteTo(SECOND.data.id, NEW_POSITION_INDEX);
+    await controller.changeNotePosition(movingNote, relatedNote, position);
 
-    const expected = MAIN_NOTE.getNoteView([
-      SECOND.getShortNote(),
-      FIRST.getShortNote(),
-    ]);
+    const expected = MAIN_NOTE.getNoteView(
+      result.map(createTestNote).map((n) => n.getShortNote())
+    );
     expect(viewModelInteractorMock.get()).toEqual<NotesViewModel>({
       currentNote: expected,
     });

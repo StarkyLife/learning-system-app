@@ -115,19 +115,40 @@ export class NotesController {
     });
   };
 
-  moveNoteTo = async (noteId: string, newPositionIndex: number) => {
+  changeNotePosition = async (
+    noteId: string,
+    relatedNoteId: string,
+    position: "up" | "down"
+  ) => {
     const currentNote = this.tryGetCurrentNote();
 
-    const noteToMoveIdx = currentNote.content.findIndex((n) => n.id === noteId);
-    if (noteToMoveIdx === -1) {
+    const noteToMoveIndex = currentNote.content.findIndex(
+      (n) => n.id === noteId
+    );
+    if (noteToMoveIndex === -1) {
       throw new Error(
         `Can't move child note with ID = ${noteId}. Reason: it doesn't exist in current parent note.`
       );
     }
 
     const updatedNoteContent = [...currentNote.content];
-    updatedNoteContent.splice(noteToMoveIdx, 1);
-    updatedNoteContent.splice(newPositionIndex, 0, currentNote.content[noteToMoveIdx]);
+    updatedNoteContent.splice(noteToMoveIndex, 1);
+
+    const relatedNoteIndex = updatedNoteContent.findIndex(
+      (n) => n.id === relatedNoteId
+    );
+    if (relatedNoteIndex === -1) {
+      throw new Error(
+        `Can't move child note with ID = ${noteId}. Reason: can't find related note with ID = ${relatedNoteId}.`
+      );
+    }
+
+    updatedNoteContent.splice(
+      position === "up" ? relatedNoteIndex : relatedNoteIndex + 1,
+      0,
+      currentNote.content[noteToMoveIndex]
+    );
+
     const updatedNote: NoteView = {
       ...currentNote,
       content: updatedNoteContent,
