@@ -44,7 +44,9 @@ export const NotesPage: React.FC = () => {
           Back
         </Button>
       )}
-      <Typography noWrap>{viewModel.currentNote.text}</Typography>
+      {viewModel.currentNote.text && (
+        <Typography noWrap>{viewModel.currentNote.text}</Typography>
+      )}
       <Stack spacing={2}>
         {viewModel.currentNote.content.map((note) => (
           <NoteBlock

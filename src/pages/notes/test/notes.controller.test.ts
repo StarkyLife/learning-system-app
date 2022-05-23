@@ -26,7 +26,7 @@ const createController = (
 
 const MAIN_NOTE = new TestNote({
   id: "main",
-  text: "Main",
+  text: "",
 });
 const CHILD_NOTE = new TestNote({
   id: "child-id",

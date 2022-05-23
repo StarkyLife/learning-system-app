@@ -99,7 +99,7 @@ export class InMemoryNotesGateway implements NotesGateway {
 
     const newMain: InMemoryDbNote = {
       id: MAIN_ID,
-      text: "Main",
+      text: "",
       content: [],
     };
     this.notes.set(newMain.id, newMain);
