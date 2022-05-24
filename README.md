@@ -1,1 +1,1 @@
-Server configuration: (link)[./docs/server-configuration.md]
+Server configuration: [link](./docs/server-configuration.md)
