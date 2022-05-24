@@ -1,4 +1,4 @@
-### Server configuration
+# Server configuration
 
 ## Configure nginx
 
@@ -59,7 +59,7 @@ docker run -dp 8080:8080 --name=justnotes starkylife/starkynotes:latest
 ]
 ```
 
-# Create system service for running webhooks detached
+### Create system service for running webhooks detached
 
 `sudo vim /etc/systemd/system/my-app-hooks.service`
 
