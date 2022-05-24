@@ -54,9 +54,20 @@ docker run -dp 8080:8080 --name=justnotes starkylife/starkynotes:latest
         "id": "redeploy",
         "execute-command": "/home/starky/redeploy-host.sh",
         "command-working-directory": "/home/starky/webhook",
-        "response-message": "Redeploying App."
+        "response-message": "Redeploying App.",
+        "trigger-rule": {
+            "match": {
+                "type": "value",
+                "value": "<NOTES_APP_REDEPLOY_TOKEN>",
+                "parameter": {
+                    "source": "header",
+                    "name": "X-App-Token"
+                }
+            }
+        }
     }
 ]
+
 ```
 
 ### Create system service for running webhooks detached
@@ -90,4 +101,4 @@ WantedBy=multi-user.target
 
 `sudo systemctl reload nginx`
 
-
+`sudo systemctl daemon-reload` - if there were changes in .service file
