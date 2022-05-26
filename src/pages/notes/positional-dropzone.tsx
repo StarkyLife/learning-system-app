@@ -14,7 +14,7 @@ export const PositionalDropzone = forwardRef<HTMLDivElement, Props>(
       variant="outlined"
       ref={ref}
       sx={{
-        height: "50px",
+        height: "56px",
         display: "flex",
         alignItems: "center",
         background: isOver ? "rgba(0,0,0,0.2)" : undefined,

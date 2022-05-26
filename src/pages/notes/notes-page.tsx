@@ -38,7 +38,7 @@ export const NotesPage: React.FC = () => {
   }
 
   return (
-    <Container maxWidth="md">
+    <Container maxWidth="md" sx={{ padding: '16px' }}>
       {viewModel.currentNote.parentId && (
         <Button variant="text" onClick={controller.goToUpperLevel}>
           Back
