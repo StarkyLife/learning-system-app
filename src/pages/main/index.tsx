@@ -2,12 +2,13 @@ import { Box, Button, Typography } from "@mui/material";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { ROUTES } from "../../shared/routes";
 
 export const MainPage: React.FC = () => {
   const navigate = useNavigate();
 
   const handleStartClick = useCallback(() => {
-    navigate("/note");
+    navigate(ROUTES.notes);
   }, [navigate]);
 
   return (
