@@ -1,8 +1,5 @@
 import { ConnectableElement, useDrag, useDrop } from "react-dnd";
-
-const DragItemTypes = {
-  NOTE: "note",
-};
+import { DragItemTypes } from "../../shared/drag-items";
 
 export function useNoteDragAndDrop(
   id: string,

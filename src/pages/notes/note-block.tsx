@@ -69,7 +69,7 @@ export const NoteBlock: React.FC<Props> = ({
         sx={{
           opacity: isDragging ? 0.3 : 1,
           background:
-            isOverNoteDropzone && canDrop ? "rgba(0,0,0,0.2)" : undefined,
+            isOverNoteDropzone && canDrop ? "rgba(0,0,0,0.1)" : undefined,
         }}
         ref={noteRef}
       >

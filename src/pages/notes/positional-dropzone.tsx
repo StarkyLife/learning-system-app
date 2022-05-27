@@ -17,7 +17,7 @@ export const PositionalDropzone = forwardRef<HTMLDivElement, Props>(
         height: "56px",
         display: "flex",
         alignItems: "center",
-        background: isOver ? "rgba(0,0,0,0.2)" : undefined,
+        background: isOver ? "rgba(0,0,0,0.1)" : undefined,
       }}
     >
       {type === "up" ? <MoveUpIcon /> : <MoveDownIcon />}
