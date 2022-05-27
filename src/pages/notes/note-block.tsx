@@ -14,7 +14,7 @@ type Props = {
   onSave: (id: string, title: string) => void;
   onDelete: (id: string) => void;
   onOpen: (id: string) => void;
-  onChangeParent: (id: string, newParentId: string) => void;
+  onMoveIn: (id: string, newParentId: string) => void;
   onChangePosition: (
     id: string,
     relatedNoteId: string,
@@ -28,7 +28,7 @@ export const NoteBlock: React.FC<Props> = ({
   onSave,
   onDelete,
   onOpen,
-  onChangeParent,
+  onMoveIn,
   onChangePosition,
 }) => {
   const { textValue, handleTextChange } = useOneInputForm(text);
@@ -53,7 +53,7 @@ export const NoteBlock: React.FC<Props> = ({
     upDropzoneRef,
     downDropzoneRef,
     noteRef,
-  } = useNoteDragAndDrop(id, onChangeParent, onChangePosition);
+  } = useNoteDragAndDrop(id, onMoveIn, onChangePosition);
 
   return (
     <div>

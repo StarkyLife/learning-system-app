@@ -100,7 +100,7 @@ export class NotesController {
     });
   };
 
-  changeNoteParent = async (id: string, newParentId: string) => {
+  moveNoteIn = async (id: string, newParentId: string) => {
     const currentNote = this.tryGetCurrentNote();
     this.deps.viewModel.update({
       currentNote: {
@@ -111,6 +111,25 @@ export class NotesController {
     await this.deps.notesGateway.moveNote({
       id,
       newParentId,
+      oldParentId: currentNote.id,
+    });
+  };
+
+  moveNoteOut = async (id: string) => {
+    const currentNote = this.tryGetCurrentNote();
+    if (!currentNote.parentId) {
+      throw new Error("There is no upper level notes!");
+    }
+
+    this.deps.viewModel.update({
+      currentNote: {
+        ...currentNote,
+        content: currentNote.content.filter((n) => n.id !== id),
+      },
+    });
+    await this.deps.notesGateway.moveNote({
+      id,
+      newParentId: currentNote.parentId,
       oldParentId: currentNote.id,
     });
   };

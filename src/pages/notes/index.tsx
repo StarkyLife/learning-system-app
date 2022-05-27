@@ -15,7 +15,7 @@ import { createViewModelInteractor } from "../../shared/lib/view-model-interacto
 
 export const NotesPage: React.FC = () => {
   const notesGateway = useContext(NotesGatewayContext);
-  if (!notesGateway) throw new Error("NotesGateway have not been connected!");
+  if (!notesGateway) throw new Error("NotesGateway hasn't been connected!");
 
   const [viewModel, setViewModel] = useState(DEFAULT_NOTES_VIEW_MODEL);
 
@@ -56,7 +56,7 @@ export const NotesPage: React.FC = () => {
             onSave={controller.saveChildNote}
             onDelete={controller.deleteChildNote}
             onOpen={controller.openChildNote}
-            onChangeParent={controller.changeNoteParent}
+            onMoveIn={controller.moveNoteIn}
             onChangePosition={controller.changeNotePosition}
           />
         ))}

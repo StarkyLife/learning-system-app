@@ -254,7 +254,7 @@ describe("Going back to upper levels", () => {
 });
 
 describe("Change note's parent", () => {
-  it("change parent inside main note", async () => {
+  it("should move child note to INNER level", async () => {
     const NOTE_TO_MOVE = new TestNote({
       id: "note-to-move-id",
       text: "note to move text",
@@ -280,7 +280,7 @@ describe("Change note's parent", () => {
         NOTE_TO_MOVE.getDbNote(),
       ]);
 
-    await controller.changeNoteParent(
+    await controller.moveNoteIn(
       NOTE_TO_MOVE.data.id,
       NEW_PARENT_NOTE.data.id
     );
@@ -292,6 +292,48 @@ describe("Change note's parent", () => {
     expect(await notesGateway.getMainNote()).toEqual(expected);
     expect(await notesGateway.getNote(NEW_PARENT_NOTE.data.id)).toEqual(
       NEW_PARENT_NOTE.getNoteView([NOTE_TO_MOVE.getShortNote()])
+    );
+  });
+
+  it("should move child note to OUTER level", async () => {
+    const NOTE_TO_MOVE = new TestNote({
+      id: "note-to-move-id",
+      text: "note to move text",
+      parentId: MAIN_NOTE.data.id,
+    });
+    const OLD_PARENT_NOTE = new TestNote({
+      id: "old-parent",
+      text: "old parent text",
+      parentId: MAIN_NOTE.data.id,
+    });
+
+    const INITIAL_VIEW_MODEL: NotesViewModel = {
+      currentNote: OLD_PARENT_NOTE.getNoteView([NOTE_TO_MOVE.getShortNote()]),
+    };
+
+    const { controller, viewModelInteractorMock, notesGateway } =
+      createController(INITIAL_VIEW_MODEL, [
+        MAIN_NOTE.getDbNote([OLD_PARENT_NOTE.data.id]),
+        OLD_PARENT_NOTE.getDbNote([NOTE_TO_MOVE.data.id]),
+        NOTE_TO_MOVE.getDbNote(),
+      ]);
+
+    await controller.moveNoteOut(
+      NOTE_TO_MOVE.data.id,
+    );
+
+    const expected = OLD_PARENT_NOTE.getNoteView();
+    expect(viewModelInteractorMock.get()).toEqual<NotesViewModel>({
+      currentNote: expected,
+    });
+    expect(await notesGateway.getNote(OLD_PARENT_NOTE.data.id)).toEqual(
+      expected
+    );
+    expect(await notesGateway.getMainNote()).toEqual(
+      MAIN_NOTE.getNoteView([
+        OLD_PARENT_NOTE.getShortNote(),
+        NOTE_TO_MOVE.getShortNote(),
+      ])
     );
   });
 });
