@@ -1,6 +1,6 @@
-import { NoteView } from "../../entities/notes";
-import { NotesGateway } from "../../gateways/notes.gateway";
-import { ViewModelInteractor } from "../../shared/lib/view-model-interactor";
+import { NoteView } from "../../../entities/notes";
+import { NotesGateway } from "../../../gateways/notes.gateway";
+import { ViewModelInteractor } from "../../../shared/lib/view-model-interactor";
 import { NotesViewModel } from "./notes.view-model";
 
 export type NotesControllerDeps = {

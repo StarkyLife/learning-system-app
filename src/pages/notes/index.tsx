@@ -3,8 +3,8 @@ import AddIcon from "@mui/icons-material/Add";
 import { useContext, useEffect, useMemo, useState } from "react";
 import { NoteBlock } from "./note-block";
 import { NotesGatewayContext } from "../../gateways/notes.gateway";
-import { NotesController } from "./notes.controller";
-import { DEFAULT_NOTES_VIEW_MODEL } from "./notes.view-model";
+import { NotesController } from "./model/notes.controller";
+import { DEFAULT_NOTES_VIEW_MODEL } from "./model/notes.view-model";
 import { createViewModelInteractor } from "../../shared/lib/view-model-interactor";
 import { BackComponent } from "./back-component";
 

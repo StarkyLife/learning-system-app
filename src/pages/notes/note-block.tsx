@@ -1,4 +1,4 @@
-import { Divider, Grid, IconButton, InputBase, Paper } from "@mui/material";
+import { Button, Divider, Grid, InputBase, Paper } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import DoubleArrowIcon from "@mui/icons-material/DoubleArrow";
@@ -105,14 +105,14 @@ export const NoteBlock: React.FC<Props> = ({
           <Grid item xs="auto">
             <Divider orientation="vertical" />
           </Grid>
-          <Grid item xs="auto">
-            <IconButton onClick={handleNoteDelete}>
-              <DeleteIcon />
-            </IconButton>
+          <Grid item xs="auto" display="flex" flexDirection="column">
+            <Button onClick={handleNoteDelete}>
+              <DeleteIcon color="action" />
+            </Button>
             <Divider />
-            <IconButton onClick={handleContentsOpen}>
-              <NavigateNextIcon />
-            </IconButton>
+            <Button onClick={handleContentsOpen} sx={{ flex: 1 }}>
+              <NavigateNextIcon color="action" />
+            </Button>
           </Grid>
         </Grid>
       </Paper>

@@ -3,8 +3,8 @@ import {
   InMemoryNotesGateway,
 } from "../../../gateways/in-memory-notes.gateway";
 import { createViewModelInteractorMock } from "../../../shared/lib/view-model-interactor-mock";
-import { NotesController } from "../notes.controller";
-import { NotesViewModel } from "../notes.view-model";
+import { NotesController } from "../model/notes.controller";
+import { NotesViewModel } from "../model/notes.view-model";
 import { TestNote } from "./test-note";
 
 const createController = (
