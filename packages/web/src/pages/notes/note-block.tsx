@@ -44,6 +44,7 @@ export const NoteBlock: React.FC<Props> = ({
   }, [id, onOpen]);
 
   const {
+    preventDragProps,
     isDragging,
     showPositionalDropzones,
     isOverUpDropzone,
@@ -91,7 +92,7 @@ export const NoteBlock: React.FC<Props> = ({
           <Grid item xs="auto">
             <Divider orientation="vertical" />
           </Grid>
-          <Grid item xs p={1}>
+          <Grid item xs p={1} {...preventDragProps}>
             <InputBase
               fullWidth
               multiline
@@ -105,7 +106,13 @@ export const NoteBlock: React.FC<Props> = ({
           <Grid item xs="auto">
             <Divider orientation="vertical" />
           </Grid>
-          <Grid item xs="auto" display="flex" flexDirection="column">
+          <Grid
+            item
+            xs="auto"
+            display="flex"
+            flexDirection="column"
+            {...preventDragProps}
+          >
             <Button onClick={handleNoteDelete}>
               <DeleteIcon color="action" />
             </Button>

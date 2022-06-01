@@ -1,3 +1,4 @@
+import { DragEventHandler, useCallback, useMemo } from "react";
 import { ConnectableElement, useDrag, useDrop } from "react-dnd";
 import { DragItemTypes } from "../../shared/drag-items";
 
@@ -67,7 +68,22 @@ export function useNoteDragAndDrop(
     upDropzone.isOver ||
     downDropzone.isOver;
 
+  const preventDragProps = useMemo<{
+    onDragStart: DragEventHandler;
+    draggable: boolean;
+  }>(
+    () => ({
+      onDragStart: (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+      },
+      draggable: true,
+    }),
+    []
+  );
+
   return {
+    preventDragProps,
     isDragging,
     showPositionalDropzones,
     isOverUpDropzone: upDropzone.isOver,
