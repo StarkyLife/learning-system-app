@@ -13,7 +13,6 @@
   },
   "scripts": {
     "clean": "lerna clean -y",
-    "bootstrap": "lerna bootstrap",
     "start": "lerna run start"
   }
 }

@@ -6,14 +6,19 @@
   "scripts": {
     "build": "tsc",
     "start": "nodemon src/index.ts",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "test:unit": "jest src",
+    "test:acceptance": "jest acceptance-tests"
   },
   "devDependencies": {
     "@tsconfig/node16": "^1.0.2",
+    "@types/jest": "^28.1.0",
     "@typescript-eslint/eslint-plugin": "^5.26.0",
     "@typescript-eslint/parser": "^5.26.0",
     "eslint": "^8.16.0",
+    "jest": "^28.1.0",
     "nodemon": "^2.0.16",
+    "ts-jest": "^28.0.4",
     "ts-node": "^10.8.0",
     "typescript": "^4.7.2"
   }

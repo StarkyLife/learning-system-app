@@ -1,3 +1,3 @@
 import { hello } from "./fn";
 
-hello();
+console.log(hello());
