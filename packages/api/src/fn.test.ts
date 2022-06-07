@@ -1,5 +1,5 @@
-import { hello } from "./fn";
+import { hello } from './fn';
 
-it("should work", () => {
-  expect(hello()).toEqual("hello");
+it('should work', () => {
+  expect(hello()).toEqual('hello');
 });

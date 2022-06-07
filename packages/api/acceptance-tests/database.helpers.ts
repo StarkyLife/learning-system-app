@@ -4,5 +4,5 @@ type User = {
 };
 
 export const givenUserDatabaseWith = (_user: Partial<User>) => {
-  throw new Error("Not implemented!");
+  throw new Error('Not implemented!');
 };

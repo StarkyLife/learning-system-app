@@ -1,3 +1,3 @@
-import { hello } from "./fn";
+import { hello } from './fn';
 
 console.log(hello());

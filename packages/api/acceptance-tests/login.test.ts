@@ -1,18 +1,18 @@
-import axios from "axios";
-import { startApp } from "./start-app";
-import { APP_URLS } from "./app-urls";
-import { getTokenFrom } from "./get-token";
-import { givenUserDatabaseWith } from "./database.helpers";
+import axios from 'axios';
+import { startApp } from './start-app';
+import { APP_URLS } from './app-urls';
+import { getTokenFrom } from './get-token';
+import { givenUserDatabaseWith } from './database.helpers';
 
 const BASE_API_URL = {
-  port: "3000",
-  full: "localhost:3000",
+  port: '3000',
+  full: 'localhost:3000',
 };
 
-it("should generate auth token given valid credentials", async () => {
+it('should generate auth token given valid credentials', async () => {
   const CREDENTIALS = {
-    userName: "testUser",
-    password: "testPassword",
+    userName: 'testUser',
+    password: 'testPassword',
   };
 
   givenUserDatabaseWith(CREDENTIALS);

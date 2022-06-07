@@ -1,3 +1,3 @@
 export const APP_URLS = {
-  login: "/login",
+  login: '/login',
 };
