@@ -1,3 +1,5 @@
-import { hello } from './fn';
+import { createApplication } from './start-app';
 
-console.log(hello());
+const app = createApplication(3000);
+
+app.start();
