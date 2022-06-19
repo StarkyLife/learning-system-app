@@ -25,6 +25,6 @@ jobs:
     needs: [docker-build]
     steps:
       - name: Trigger redeploy
-        run: curl -X POST -H "X-App-Token:${{ secrets.NOTES_APP_REDEPLOY_TOKEN }}" http://starkynotes.ru/hooks/redeploy
+        run: curl -X POST -H "X-App-Token:${{ secrets.NOTES_APP_REDEPLOY_TOKEN }}" https://starkynotes.ru/hooks/redeploy
       
 
