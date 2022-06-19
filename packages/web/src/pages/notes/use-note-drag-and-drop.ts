@@ -1,4 +1,4 @@
-import { DragEventHandler, useCallback, useMemo } from "react";
+import { DragEventHandler, useMemo } from "react";
 import { ConnectableElement, useDrag, useDrop } from "react-dnd";
 import { DragItemTypes } from "../../shared/drag-items";
 
