@@ -4,8 +4,12 @@ import http from 'http';
 export function createApplication(port: number) {
   const app = express();
 
-  app.use('/', (_, res) => {
-    res.send('Hello');
+  app.use('/login', (_, res) => {
+    res.send('Logged In');
+  });
+
+  app.use('/logout', (_, res) => {
+    res.send('Logged Out');
   });
 
   let serverInstance: http.Server | null;

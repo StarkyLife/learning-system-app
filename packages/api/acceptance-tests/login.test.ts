@@ -1,6 +1,5 @@
 import axios from 'axios';
 import { APP_URLS } from './app-urls';
-import { getTokenFrom } from './get-token';
 import { givenUserDatabaseWith } from './database.helpers';
 import { createApplication } from '../src/start-app';
 
@@ -14,7 +13,7 @@ const app = createApplication(BASE_API_URL.port);
 beforeEach(app.start);
 afterEach(app.stop);
 
-it('should generate auth token given valid credentials', async () => {
+it('should be able to login and logout', async () => {
   const CREDENTIALS = {
     userName: 'testUser',
     password: 'testPassword',
@@ -26,8 +25,9 @@ it('should generate auth token given valid credentials', async () => {
     baseURL: BASE_API_URL.full,
   });
 
-  const response = await axiosInstance.post(APP_URLS.login, CREDENTIALS);
+  const loginResponse = await axiosInstance.post(APP_URLS.login, CREDENTIALS);
+  expect(loginResponse.status).toBe(200);
 
-  expect(response.status).toBe(200);
-  expect(getTokenFrom(response)).toBeTruthy();
+  const logoutResponse = await axiosInstance.post(APP_URLS.logout);
+  expect(logoutResponse.status).toBe(200);
 });
